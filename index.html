@@ -244,18 +244,14 @@ function labelsWanted() { return labelMode === 'on' || (labelMode === 'auto' && 
 function refreshLabels() {
   labelLayer.clearLayers();
   if (!labelsWanted()) return;
-  const view = map.getBounds().pad(0.1); let n = 0;
+  const view = map.getBounds().pad(0.1), c = map.getCenter(), cand = [];
   for (const { group, markers } of bookLayers.values()) {
     if (!overlayLayer.hasLayer(group)) continue;
-    for (const { m, r } of markers) {
-      if (n >= MAX_LABELS) return;
-      const ll = m.getLatLng();
-      if (!view.contains(ll)) continue;
-      labelLayer.addLayer(L.tooltip({ permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov', interactive: false })
-        .setLatLng(ll).setContent(esc(r.fullName)));
-      n++;
-    }
+    for (const { m, r } of markers) { const ll = m.getLatLng(); if (view.contains(ll)) cand.push({ ll, r, d: (ll.lat - c.lat) ** 2 + (ll.lng - c.lng) ** 2 }); }
   }
+  cand.sort((a, b) => a.d - b.d);
+  for (const { ll, r } of cand.slice(0, MAX_LABELS))
+    labelLayer.addLayer(L.tooltip({ permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov', interactive: false }).setLatLng(ll).setContent(esc(r.fullName)));
 }
 map.on('zoomstart', () => { clearTimeout(labelTimer); labelLayer.clearLayers(); });
 map.on('moveend zoomend', scheduleLabels);
