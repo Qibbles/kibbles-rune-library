@@ -318,7 +318,7 @@ function searchCoords(x, y, list) {
   const ll = toLL(x, y);
   const target = { fullName: `X ${x}, Y ${y}`, location: { x, y } };
   const from = worldPos(target) || { x, y, via: null };
-  L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin hit" style="background:#3fa9f5">✕</div>', iconSize: [26, 26], iconAnchor: [13, 13] }), pane: 'searchPane' })
+  L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin hit">✕</div>', iconSize: [26, 26], iconAnchor: [13, 13] }), pane: 'searchPane', interactive: false })
     .bindTooltip(`X ${x}, Y ${y}`, { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' }).addTo(focusLayer);
   map.flyTo(ll, Math.max(map.getZoom(), 5));
   const hits = [];
@@ -330,11 +330,12 @@ function searchCoords(x, y, list) {
   const box = document.createElement('div'); box.className = 'set';
   box.innerHTML = `<div style="padding:10px 12px" class="count">Nearest runes to X ${x}, Y ${y}</div>`;
   const wrap = document.createElement('div'); wrap.className = 'books';
-  hits.slice(0, 25).forEach(({ s, b, r, d, via }) => {
+  hits.slice(0, 25).forEach(({ s, b, r, d, via }, i) => {
     const rl = toLL(r.location.x, r.location.y);
-    const m = hitMarker(rl, r, b).addTo(focusLayer);
+    const m = bindRune(L.marker(rl, { icon: pinIcon(i + 1), zIndexOffset: 1000 - i }), r, b)
+      .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
     const el = document.createElement('div'); el.className = 'book';
-    el.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(b.name)}${via ? ' · via entrance' : ''}</span></span><span class="count">${Math.round(d)} tiles</span>`;
+    el.innerHTML = `<span class="count" style="width:18px;text-align:right;color:var(--gold)">${i + 1}</span><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(b.name)}${via ? ' · via entrance' : ''}</span></span><span class="count">${Math.round(d)} tiles</span>`;
     el.onclick = () => { map.flyTo(rl, Math.max(map.getZoom(), 5)); m.openPopup(); };
     wrap.appendChild(el);
   });
