@@ -104,7 +104,6 @@
     <div class="tools">
       <button class="btn" id="lblBtn" title="Show rune names on overlay pins">Labels</button>
       <button class="btn" id="clearOv">Clear overlays</button>
-      <button class="btn" id="rot" title="Rotate the map 45° like the in-game view">Game view ⟳</button>
     </div>
     <div class="coords" id="coords">–</div>
   </main>
@@ -126,12 +125,8 @@ const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
 L.tileLayer('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true }).addTo(map);
 map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(SURFACE_W, MAP_H)));
 
-// Game view rotation (45° clockwise, like the in-game isometric view)
-let rotated = store.get('rotated', true);
-const rotBtn = document.getElementById('rot');
-function applyRotation() { map.setBearing(rotated ? 45 : 0); rotBtn.classList.toggle('on', rotated); store.set('rotated', rotated); }
-rotBtn.onclick = () => { rotated = !rotated; applyRotation(); };
-applyRotation();
+// Rotated 45° clockwise to match the in-game view
+map.setBearing(45);
 
 const coordsEl = document.getElementById('coords');
 map.on('mousemove', e => { const [x, y] = toXY(e.latlng); coordsEl.textContent = `X ${x}, Y ${y}`; });
