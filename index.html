@@ -123,7 +123,7 @@ const PALETTE = ['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#4
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
-const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
+const map = L.map('map', { crs: L.CRS.Simple, renderer: L.svg({ padding: 0.5 }), minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
   rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
 const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
@@ -136,7 +136,7 @@ const RotatedTiles = L.TileLayer.extend({
     return L.bounds(b.min.subtract([px, py]), b.max.add([px, py]));
   }
 });
-new RotatedTiles('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true, keepBuffer: 4 }).addTo(map);
+new RotatedTiles('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true, keepBuffer: 4, updateWhenZooming: false, updateWhenIdle: true }).addTo(map);
 map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(SURFACE_W, MAP_H)));
 
 // Rotated 45° clockwise to match the in-game view
@@ -210,19 +210,55 @@ function bindRune(m, r, book) {
   return m;
 }
 
-// Overlays
-function drawOverlays() {
-  overlayLayer.clearLayers();
-  for (const s of DATA.sets) for (const b of s.books) {
-    if (!overlays.has(bookKey(s, b))) continue;
+// Overlays: each book's pins are built once and cached; toggling just adds/removes the cached group
+const bookLayers = new Map();   // bookKey -> { group, markers: [{ m, r }] }
+function getBookLayer(s, b) {
+  const k = bookKey(s, b);
+  if (!bookLayers.has(k)) {
+    const group = L.layerGroup(), markers = [];
     for (const r of bookRunes(b)) {
-      bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 6, bubblingMouseEvents: false, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b)
-        .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov' })
-        .addTo(overlayLayer);
+      const m = bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 6, bubblingMouseEvents: false, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b);
+      group.addLayer(m); markers.push({ m, r });
     }
+    bookLayers.set(k, { group, markers });
+  }
+  return bookLayers.get(k);
+}
+function drawOverlays() {
+  for (const s of DATA.sets) for (const b of s.books) {
+    const on = overlays.has(bookKey(s, b)), cached = bookLayers.get(bookKey(s, b));
+    if (on) { const l = getBookLayer(s, b); if (!overlayLayer.hasLayer(l.group)) overlayLayer.addLayer(l.group); }
+    else if (cached && overlayLayer.hasLayer(cached.group)) overlayLayer.removeLayer(cached.group);
   }
   store.set('overlays', [...overlays]);
+  scheduleLabels();
 }
+
+// Overlay labels: only for pins currently on screen, rebuilt after pan/zoom settles (capped for speed)
+let labelMode = store.get('labelMode', 'auto');   // auto | on | off
+const labelLayer = L.layerGroup().addTo(map);
+const MAX_LABELS = 300;
+let labelTimer = null;
+function scheduleLabels() { clearTimeout(labelTimer); labelTimer = setTimeout(refreshLabels, 120); }
+function labelsWanted() { return labelMode === 'on' || (labelMode === 'auto' && map.getZoom() >= 4); }
+function refreshLabels() {
+  labelLayer.clearLayers();
+  if (!labelsWanted()) return;
+  const view = map.getBounds().pad(0.1); let n = 0;
+  for (const { group, markers } of bookLayers.values()) {
+    if (!overlayLayer.hasLayer(group)) continue;
+    for (const { m, r } of markers) {
+      if (n >= MAX_LABELS) return;
+      const ll = m.getLatLng();
+      if (!view.contains(ll)) continue;
+      labelLayer.addLayer(L.tooltip({ permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov', interactive: false })
+        .setLatLng(ll).setContent(esc(r.fullName)));
+      n++;
+    }
+  }
+}
+map.on('zoomstart', () => { clearTimeout(labelTimer); labelLayer.clearLayers(); });
+map.on('moveend zoomend', scheduleLabels);
 
 function showBook(set, book, el) {
   current = { set, book };
@@ -320,15 +356,14 @@ document.getElementById('qclear').onclick = () => { q.value = ''; sbox.classList
 q.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('qclear').click(); });
 
 // Overlay labels: auto (show when zoomed in), or forced on/off via the Labels button
-let labelMode = store.get('labelMode', 'auto');   // auto | on | off
+
 const lblBtn = document.getElementById('lblBtn'), mapEl = document.getElementById('map');
 function updateLabels() {
-  const show = labelMode === 'on' || (labelMode === 'auto' && map.getZoom() >= 4);
-  mapEl.classList.toggle('nolabels', !show);
+  scheduleLabels();
   lblBtn.textContent = 'Labels: ' + labelMode; lblBtn.classList.toggle('on', labelMode !== 'off');
 }
 lblBtn.onclick = () => { labelMode = { auto: 'on', on: 'off', off: 'auto' }[labelMode]; store.set('labelMode', labelMode); updateLabels(); };
-map.on('zoomend', updateLabels); updateLabels();
+updateLabels();
 document.getElementById('dClose').onclick = () => {
   document.getElementById('detail').classList.remove('on'); focusLayer.clearLayers(); current = null;
   document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active'));
