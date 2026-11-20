@@ -69,6 +69,8 @@
   .leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
   .leaflet-tooltip{background:var(--panel);color:var(--text);border:1px solid var(--line);font:12px Inter,sans-serif;box-shadow:none}
   .leaflet-tooltip:before{display:none}
+  .leaflet-tooltip.hovertip{padding:9px 12px;border-radius:10px;min-width:200px;white-space:normal;font:13px Inter,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+  .leaflet-tooltip.hovertip b{color:var(--gold2)}
   .pop-meta{color:var(--muted);font-size:12px;margin-top:3px}
   .near{margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
   .near div{display:flex;gap:6px;align-items:center;font-size:12px;padding:2px 0;cursor:pointer}
@@ -188,11 +190,20 @@ map.on('popupopen', e => {
   e.popup.getElement().querySelectorAll('.near div[data-x]').forEach(el => el.onclick = () =>
     map.flyTo(toLL(+el.dataset.x, +el.dataset.y), Math.max(map.getZoom(), 5)));
 });
+// Hover: temporary preview that disappears on mouse-out. Click: pinned popup that stays until closed with ×.
+let hoverTip = null;
+function hideHover() { if (hoverTip) { hoverTip.remove(); hoverTip = null; } }
 function bindRune(m, r, book) {
-  m.bindPopup(() => popupHtml(r, book), { autoPan: false });
-  m.off('click', m._openPopup);   // default click toggles, which closes a popup the hover just opened
-  m.on('click', e => { L.DomEvent.stop(e); if (!m.isPopupOpen()) m.openPopup(); });
-  m.on('mouseover', () => { if (!m.isPopupOpen()) m.openPopup(); });
+  m.bindPopup(() => popupHtml(r, book), { autoPan: false, closeOnClick: false });
+  m.off('click', m._openPopup);
+  m.on('click', e => { L.DomEvent.stop(e); hideHover(); if (!m.isPopupOpen()) m.openPopup(); });
+  m.on('mouseover', () => {
+    if (m.isPopupOpen()) return;
+    hideHover();
+    hoverTip = L.tooltip({ className: 'hovertip', direction: 'top', offset: [0, -12], opacity: 1 })
+      .setLatLng(m.getLatLng()).setContent(popupHtml(r, book)).addTo(map);
+  });
+  m.on('mouseout', hideHover);
   return m;
 }
 
