@@ -10,33 +10,37 @@
 <style>
   :root{
     --bg:#0e0f13; --panel:#15171d; --panel2:#1c1f27; --line:#2a2e39;
-    --text:#e6e1d6; --muted:#9a968c; --gold:#d6b25e; --gold2:#f0d48a; --accent:#7fb3d5;
+    --text:#e6e1d6; --muted:#9a968c; --gold:#d6b25e; --gold2:#f0d48a;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
   #app{display:flex;height:100%}
-  aside{width:340px;min-width:340px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
+  aside{width:350px;min-width:350px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
   header{padding:16px 16px 12px;border-bottom:1px solid var(--line)}
   h1{font:700 20px Cinzel,serif;color:var(--gold2);margin:0 0 2px;letter-spacing:.5px}
   .sub{color:var(--muted);font-size:12px}
   .search{margin-top:12px;width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;outline:none}
   .search:focus{border-color:var(--gold)}
+  .hint{margin-top:8px;color:var(--muted);font-size:11.5px}
   #list{flex:1;overflow:auto;padding:8px}
   .set{margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
-  .set>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;gap:10px}
+  .set>summary{list-style:none;cursor:pointer;padding:9px 10px;display:flex;align-items:center;gap:9px}
   .set>summary::-webkit-details-marker{display:none}
   .set>summary:hover{background:#222632}
-  .set .ic{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:#2b2418;color:var(--gold);font:700 13px Cinzel,serif;flex:none}
+  .sw{width:12px;height:12px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.5)}
   .set .nm{flex:1;font-weight:600}
   .count{color:var(--muted);font-size:12px;white-space:nowrap}
   .books{padding:2px 6px 8px}
-  .book{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;color:#cfcabe}
+  .book{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;color:#cfcabe}
   .book:hover{background:#262a35}
   .book.active{background:#33291a;color:var(--gold2)}
-  .setlinks{display:flex;gap:6px;padding:4px 10px 6px;flex-wrap:wrap}
+  .book .nm{flex:1}
+  input[type=checkbox]{accent-color:var(--gold);width:15px;height:15px;margin:0;cursor:pointer;flex:none}
+  .setlinks{display:flex;gap:6px;padding:4px 8px 6px;flex-wrap:wrap}
   .btn{font:500 12px Inter,sans-serif;color:var(--text);background:#262a35;border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer;text-decoration:none}
   .btn:hover{border-color:var(--gold);color:var(--gold2)}
-  #detail{border-top:1px solid var(--line);max-height:45%;display:none;flex-direction:column}
+  .btn.on{border-color:var(--gold);color:var(--gold2)}
+  #detail{border-top:1px solid var(--line);max-height:42%;display:none;flex-direction:column}
   #detail.on{display:flex}
   #detail .hd{padding:10px 12px;display:flex;gap:8px;align-items:center}
   #detail .hd b{flex:1;font:700 14px Cinzel,serif;color:var(--gold2)}
@@ -45,17 +49,23 @@
   #runes li:hover{background:#262a35}
   #runes .n{width:22px;text-align:right;color:var(--gold);flex:none}
   #runes .c{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-  main{flex:1;position:relative}
+  main{flex:1;position:relative;overflow:hidden}
   #map{position:absolute;inset:0;background:#000}
+  .tools{position:absolute;right:10px;top:10px;z-index:700;display:flex;gap:6px}
+  .tools .btn{background:rgba(21,23,29,.92)}
   .coords{position:absolute;right:10px;bottom:10px;z-index:500;background:rgba(14,15,19,.85);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .pin{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#1a1408;border:2px solid #1a1408;display:grid;place-items:center;font:700 10px Inter,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.6)}
-  .pin.dim{width:10px;height:10px;background:var(--accent);border-width:1px}
   .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text);border:1px solid var(--line)}
-  .leaflet-popup-content{margin:10px 12px;font:13px Inter,sans-serif}
+  .leaflet-popup-content{margin:10px 12px;font:13px Inter,sans-serif;min-width:200px}
   .leaflet-popup-content b{color:var(--gold2)}
   .leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+  .leaflet-tooltip{background:var(--panel);color:var(--text);border:1px solid var(--line);font:12px Inter,sans-serif;box-shadow:none}
+  .leaflet-tooltip:before{display:none}
   .pop-meta{color:var(--muted);font-size:12px;margin-top:3px}
-  .menu{position:absolute;left:10px;top:10px;z-index:600;display:none}
+  .near{margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
+  .near div{display:flex;gap:6px;align-items:center;font-size:12px;padding:2px 0;cursor:pointer}
+  .near div:hover{color:var(--gold2)}
+  .near .d{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
   @media (max-width:760px){
     #app{flex-direction:column-reverse}
     aside{width:100%;min-width:0;height:45%}
@@ -70,6 +80,7 @@
       <h1>Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
       <input id="q" class="search" placeholder="Search runes…" autocomplete="off">
+      <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
     </header>
     <div id="list"></div>
     <div id="detail">
@@ -82,50 +93,102 @@
   </aside>
   <main>
     <div id="map"></div>
+    <div class="tools">
+      <button class="btn" id="clearOv">Clear overlays</button>
+      <button class="btn" id="rot" title="Rotate the map 45° like the in-game view">Game view ⟳</button>
+    </div>
     <div class="coords" id="coords">–</div>
   </main>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script>
-const MAP_W = 7680, MAP_H = 4096, NATIVE = 5;
+const MAP_W = 7680, MAP_H = 4096, NATIVE = 5, SURFACE_W = 4736;
+const PALETTE = ['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00c2a8','#e6beff','#ff8c42','#fffac8','#aaffc3','#ffd8b1'];
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
-const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false });
+const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
+  preferCanvas: true, rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
+const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
 const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
 L.tileLayer('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true }).addTo(map);
-map.setMaxBounds(bounds.pad(0.2));
-map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(4736, 4096)));
+map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(SURFACE_W, MAP_H)));
+
+// Game view rotation (45° clockwise, like the in-game isometric view)
+let rotated = store.get('rotated', true);
+const rotBtn = document.getElementById('rot');
+function applyRotation() { map.setBearing(rotated ? -45 : 0); rotBtn.classList.toggle('on', rotated); store.set('rotated', rotated); }
+rotBtn.onclick = () => { rotated = !rotated; applyRotation(); };
+applyRotation();
 
 const coordsEl = document.getElementById('coords');
-map.on('mousemove', e => {
-  const p = map.project(e.latlng, NATIVE);
-  coordsEl.textContent = `X ${Math.floor(p.x)}, Y ${Math.floor(p.y)}`;
-});
+map.on('mousemove', e => { const [x, y] = toXY(e.latlng); coordsEl.textContent = `X ${x}, Y ${y}`; });
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const layer = L.layerGroup().addTo(map);
+const focusLayer = L.layerGroup().addTo(map);
+const overlayLayer = L.layerGroup().addTo(map);
 let DATA, RUNES, current = null;
+let overlays = new Set(store.get('overlays', []));   // keys: "<setId>|<bookId>"
+const bookKey = (s, b) => `${s.setId}|${b.id}`;
+const bookRunes = b => b.runeIds.map(id => RUNES[id]).filter(r => r && r.location);
 
-function pinIcon(label, dim) {
-  return L.divIcon({ className: '', html: `<div class="pin${dim ? ' dim' : ''}">${dim ? '' : esc(label)}</div>`,
-    iconSize: dim ? [10, 10] : [22, 22], iconAnchor: dim ? [5, 5] : [11, 11] });
+function pinIcon(label) {
+  return L.divIcon({ className: '', html: `<div class="pin">${esc(label)}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] });
+}
+
+// Nearest rune from each overlay set (excluding the rune's own book)
+function nearestHtml(r, ownBook) {
+  const best = new Map();
+  for (const s of DATA.sets) for (const b of s.books) {
+    if (!overlays.has(bookKey(s, b)) || b === ownBook) continue;
+    for (const o of bookRunes(b)) {
+      if (o === r) continue;
+      const d = Math.hypot(o.location.x - r.location.x, o.location.y - r.location.y);
+      const cur = best.get(s.setId);
+      if (!cur || d < cur.d) best.set(s.setId, { d, o, s, b });
+    }
+  }
+  if (!best.size) return '';
+  const rows = [...best.values()].sort((a, b) => a.d - b.d).map(({ d, o, s, b }) =>
+    `<div data-x="${o.location.x}" data-y="${o.location.y}"><span class="sw" style="background:${s.color}"></span><span>${esc(o.fullName)}<br><span class="pop-meta" style="margin:0">${esc(b.name)}</span></span><span class="d">${Math.round(d)} tiles</span></div>`).join('');
+  return `<div class="near"><div class="pop-meta" style="cursor:default">Nearest overlay runes</div>${rows}</div>`;
 }
 function popupHtml(r, book) {
-  return `<b>${esc(r.fullName)}</b><div class="pop-meta">${book ? esc(book.name) + ' · ' : ''}X ${r.location.x}, Y ${r.location.y}</div>`;
+  return `<b>${esc(r.fullName)}</b><div class="pop-meta">${book ? esc(book.name) + ' · ' : ''}X ${r.location.x}, Y ${r.location.y}</div>${nearestHtml(r, book)}`;
 }
-function bookRunes(book) { return book.runeIds.map(id => RUNES[id]).filter(r => r && r.location); }
+map.on('popupopen', e => {
+  e.popup.getElement().querySelectorAll('.near div[data-x]').forEach(el => el.onclick = () =>
+    map.flyTo(toLL(+el.dataset.x, +el.dataset.y), Math.max(map.getZoom(), 5)));
+});
+function bindRune(m, r, book) { m.bindPopup(() => popupHtml(r, book)); return m; }
+
+// Overlays
+function drawOverlays() {
+  overlayLayer.clearLayers();
+  for (const s of DATA.sets) for (const b of s.books) {
+    if (!overlays.has(bookKey(s, b))) continue;
+    for (const r of bookRunes(b)) {
+      bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 5, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b)
+        .bindTooltip(`${esc(r.fullName)} <span style="color:#9a968c">· ${esc(b.name)}</span>`, { direction: 'top', offset: [0, -4] })
+        .addTo(overlayLayer);
+    }
+  }
+  store.set('overlays', [...overlays]);
+}
 
 function showBook(set, book, el) {
   current = { set, book };
   document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active'));
   el && el.classList.add('active');
-  layer.clearLayers();
+  focusLayer.clearLayers();
   const rs = bookRunes(book), pts = [];
   const ol = document.getElementById('runes'); ol.innerHTML = '';
   rs.forEach((r, i) => {
     const ll = toLL(r.location.x, r.location.y); pts.push(ll);
-    const m = L.marker(ll, { icon: pinIcon(i + 1) }).bindPopup(popupHtml(r, book)).addTo(layer);
+    const m = bindRune(L.marker(ll, { icon: pinIcon(i + 1), zIndexOffset: 1000 }), r, book).addTo(focusLayer);
     const li = document.createElement('li');
     li.innerHTML = `<span class="n">${i + 1}</span><span>${esc(r.fullName)}</span><span class="c">${r.location.x}, ${r.location.y}</span>`;
     li.onclick = () => { map.flyTo(ll, Math.max(map.getZoom(), 5)); m.openPopup(); };
@@ -133,7 +196,7 @@ function showBook(set, book, el) {
   });
   document.getElementById('dTitle').textContent = `${book.name} (${rs.length})`;
   document.getElementById('detail').classList.add('on');
-  if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.25), { maxZoom: 5 });
+  if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.3), { maxZoom: 5 });
 }
 
 function exportXml(name, runes) {
@@ -146,11 +209,16 @@ function exportXml(name, runes) {
   a.click();
 }
 
+function syncSetBox(s, box) {
+  const n = s.books.filter(b => overlays.has(bookKey(s, b))).length;
+  box.checked = n === s.books.length; box.indeterminate = n > 0 && n < s.books.length;
+}
+
 function render(filter = '') {
   const list = document.getElementById('list'); list.innerHTML = '';
   const f = filter.trim().toLowerCase();
-  if (f) { // search mode
-    layer.clearLayers(); const hits = [];
+  if (f) {
+    focusLayer.clearLayers(); const hits = [];
     DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => {
       if (r.fullName.toLowerCase().includes(f)) hits.push({ s, b, r });
     })));
@@ -159,9 +227,9 @@ function render(filter = '') {
     const wrap = document.createElement('div'); wrap.className = 'books';
     hits.slice(0, 300).forEach(({ s, b, r }) => {
       const ll = toLL(r.location.x, r.location.y);
-      const m = L.marker(ll, { icon: pinIcon('', true) }).bindPopup(popupHtml(r, b)).addTo(layer);
+      const m = bindRune(L.marker(ll, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b).addTo(focusLayer);
       const d = document.createElement('div'); d.className = 'book';
-      d.innerHTML = `<span>${esc(r.fullName)}<br><span class="count">${esc(s.setName)} · ${esc(b.name)}</span></span><span class="count">${r.location.x}, ${r.location.y}</span>`;
+      d.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(s.setName)} · ${esc(b.name)}</span></span><span class="count">${r.location.x}, ${r.location.y}</span>`;
       d.onclick = () => { map.flyTo(ll, 5); m.openPopup(); };
       wrap.appendChild(d);
     });
@@ -170,7 +238,16 @@ function render(filter = '') {
   }
   DATA.sets.forEach(s => {
     const det = document.createElement('details'); det.className = 'set';
-    det.innerHTML = `<summary><span class="ic">${s.setType === 'tome' ? 'T' : 'B'}</span><span class="nm">${esc(s.setName)}</span><span class="count">${s.books.reduce((m, b) => m + b.runeIds.length, 0)} runes</span></summary>`;
+    const total = s.books.reduce((m, b) => m + b.runeIds.length, 0);
+    det.innerHTML = `<summary><input type="checkbox" title="Show whole set as overlay"><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(s.setName)}</span><span class="count">${total} runes</span></summary>`;
+    const setBox = det.querySelector('input');
+    setBox.onclick = e => e.stopPropagation();
+    setBox.onchange = () => {
+      s.books.forEach(b => setBox.checked ? overlays.add(bookKey(s, b)) : overlays.delete(bookKey(s, b)));
+      det.querySelectorAll('.book input').forEach(i => i.checked = setBox.checked);
+      drawOverlays();
+    };
+    syncSetBox(s, setBox);
     const links = document.createElement('div'); links.className = 'setlinks';
     if (s.vendorSearchUrl && s.vendorSearchUrl.shortUrl)
       links.innerHTML += `<a class="btn" target="_blank" rel="noopener" href="${esc(s.vendorSearchUrl.shortUrl)}">Vendor search ↗</a>`;
@@ -180,7 +257,11 @@ function render(filter = '') {
     const books = document.createElement('div'); books.className = 'books';
     s.books.forEach(b => {
       const d = document.createElement('div'); d.className = 'book';
-      d.innerHTML = `<span>${esc(b.name)}</span><span class="count">${b.runeIds.length}</span>`;
+      d.innerHTML = `<input type="checkbox" title="Show as overlay"><span class="nm">${esc(b.name)}</span><span class="count">${b.runeIds.length}</span>`;
+      const cb = d.querySelector('input');
+      cb.checked = overlays.has(bookKey(s, b));
+      cb.onclick = e => e.stopPropagation();
+      cb.onchange = () => { cb.checked ? overlays.add(bookKey(s, b)) : overlays.delete(bookKey(s, b)); syncSetBox(s, setBox); drawOverlays(); };
       d.onclick = () => showBook(s, b, d);
       books.appendChild(d);
     });
@@ -190,17 +271,20 @@ function render(filter = '') {
 
 document.getElementById('q').addEventListener('input', e => render(e.target.value));
 document.getElementById('dClose').onclick = () => {
-  document.getElementById('detail').classList.remove('on'); layer.clearLayers(); current = null;
+  document.getElementById('detail').classList.remove('on'); focusLayer.clearLayers(); current = null;
   document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active'));
 };
 document.getElementById('dExport').onclick = () => current && exportXml(current.book.name, bookRunes(current.book));
+document.getElementById('clearOv').onclick = () => { overlays.clear(); drawOverlays(); render(document.getElementById('q').value); };
 
 fetch('data/library.json').then(r => r.json()).then(d => {
   DATA = d; RUNES = d.runes;
   DATA.sets.sort((a, b) => a.setName.localeCompare(b.setName));
-  const nRunes = DATA.sets.reduce((n, s) => n + s.books.reduce((m, b) => m + b.runeIds.length, 0), 0), nBooks = DATA.sets.reduce((n, s) => n + s.books.length, 0);
+  DATA.sets.forEach((s, i) => s.color = s.color || PALETTE[i % PALETTE.length]);
+  const nRunes = DATA.sets.reduce((n, s) => n + s.books.reduce((m, b) => m + b.runeIds.length, 0), 0);
+  const nBooks = DATA.sets.reduce((n, s) => n + s.books.length, 0);
   document.getElementById('stats').textContent = `${DATA.sets.length} sets · ${nBooks} books · ${nRunes} runes`;
-  render();
+  render(); drawOverlays();
 }).catch(err => { document.getElementById('stats').textContent = 'Could not load data/library.json'; console.error(err); });
 </script>
 </body>
