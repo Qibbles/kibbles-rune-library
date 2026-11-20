@@ -129,7 +129,7 @@ const PALETTE = ['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#4
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
-const map = L.map('map', { crs: L.CRS.Simple, renderer: L.svg({ padding: 0.5 }), minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
+const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
   rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
 map.createPane('searchPane').style.zIndex = 690;   // above overlay pins and labels, below popups
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
