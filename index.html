@@ -123,7 +123,15 @@ const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
 const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
 const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
-L.tileLayer('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true }).addTo(map);
+// When rotated, the visible area is larger than the unrotated view box: load tiles covering its full diagonal
+const RotatedTiles = L.TileLayer.extend({
+  _getTiledPixelBounds(center) {
+    const b = L.TileLayer.prototype._getTiledPixelBounds.call(this, center), sz = b.getSize();
+    const d = Math.hypot(sz.x, sz.y), px = (d - sz.x) / 2 + 256, py = (d - sz.y) / 2 + 256;
+    return L.bounds(b.min.subtract([px, py]), b.max.add([px, py]));
+  }
+});
+new RotatedTiles('tiles/{z}/{x}/{y}.png', { maxNativeZoom: NATIVE, maxZoom: 7, minZoom: 1, bounds, noWrap: true, keepBuffer: 4 }).addTo(map);
 map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(SURFACE_W, MAP_H)));
 
 // Rotated 45° clockwise to match the in-game view
@@ -182,6 +190,8 @@ map.on('popupopen', e => {
 });
 function bindRune(m, r, book) {
   m.bindPopup(() => popupHtml(r, book), { autoPan: false });
+  m.off('click', m._openPopup);   // default click toggles, which closes a popup the hover just opened
+  m.on('click', e => { L.DomEvent.stop(e); if (!m.isPopupOpen()) m.openPopup(); });
   m.on('mouseover', () => { if (!m.isPopupOpen()) m.openPopup(); });
   return m;
 }
