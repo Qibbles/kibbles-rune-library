@@ -21,6 +21,14 @@
   .sub{color:var(--muted);font-size:12px}
   .search{margin-top:12px;width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;outline:none}
   .search:focus{border-color:var(--gold)}
+  .sbox{position:relative;margin-top:12px}
+  .sbox .search{margin-top:0;padding-right:34px}
+  .sclear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;display:none}
+  .sclear:hover{background:#262a35;color:var(--gold2)}
+  .sbox.has .sclear{display:block}
+  .leaflet-tooltip.lbl{background:rgba(14,15,19,.82);border:0;padding:1px 5px;font:600 11px Inter,sans-serif;color:#f3eee2;border-radius:4px;white-space:nowrap;pointer-events:none}
+  .leaflet-tooltip.lbl.focus{color:var(--gold2);font-size:12px}
+  #map.nolabels .leaflet-tooltip.lbl.ov{display:none}
   .hint{margin-top:8px;color:var(--muted);font-size:11.5px}
   #list{flex:1;overflow:auto;padding:8px}
   .set{margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
@@ -79,7 +87,7 @@
     <header>
       <h1>Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
-      <input id="q" class="search" placeholder="Search runes…" autocomplete="off">
+      <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
       <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
     </header>
     <div id="list"></div>
@@ -94,6 +102,7 @@
   <main>
     <div id="map"></div>
     <div class="tools">
+      <button class="btn" id="lblBtn" title="Show rune names on overlay pins">Labels</button>
       <button class="btn" id="clearOv">Clear overlays</button>
       <button class="btn" id="rot" title="Rotate the map 45° like the in-game view">Game view ⟳</button>
     </div>
@@ -172,7 +181,7 @@ function drawOverlays() {
     if (!overlays.has(bookKey(s, b))) continue;
     for (const r of bookRunes(b)) {
       bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 5, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b)
-        .bindTooltip(`${esc(r.fullName)} <span style="color:#9a968c">· ${esc(b.name)}</span>`, { direction: 'top', offset: [0, -4] })
+        .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov' })
         .addTo(overlayLayer);
     }
   }
@@ -188,7 +197,8 @@ function showBook(set, book, el) {
   const ol = document.getElementById('runes'); ol.innerHTML = '';
   rs.forEach((r, i) => {
     const ll = toLL(r.location.x, r.location.y); pts.push(ll);
-    const m = bindRune(L.marker(ll, { icon: pinIcon(i + 1), zIndexOffset: 1000 }), r, book).addTo(focusLayer);
+    const m = bindRune(L.marker(ll, { icon: pinIcon(i + 1), zIndexOffset: 1000 }), r, book)
+      .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
     const li = document.createElement('li');
     li.innerHTML = `<span class="n">${i + 1}</span><span>${esc(r.fullName)}</span><span class="c">${r.location.x}, ${r.location.y}</span>`;
     li.onclick = () => { map.flyTo(ll, Math.max(map.getZoom(), 5)); m.openPopup(); };
@@ -227,7 +237,8 @@ function render(filter = '') {
     const wrap = document.createElement('div'); wrap.className = 'books';
     hits.slice(0, 300).forEach(({ s, b, r }) => {
       const ll = toLL(r.location.x, r.location.y);
-      const m = bindRune(L.marker(ll, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b).addTo(focusLayer);
+      const m = bindRune(L.marker(ll, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b)
+        .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
       const d = document.createElement('div'); d.className = 'book';
       d.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(s.setName)} · ${esc(b.name)}</span></span><span class="count">${r.location.x}, ${r.location.y}</span>`;
       d.onclick = () => { map.flyTo(ll, 5); m.openPopup(); };
@@ -267,7 +278,21 @@ function render(filter = '') {
   });
 }
 
-document.getElementById('q').addEventListener('input', e => render(e.target.value));
+const q = document.getElementById('q'), sbox = document.getElementById('sbox');
+q.addEventListener('input', e => { sbox.classList.toggle('has', !!q.value); render(q.value); });
+document.getElementById('qclear').onclick = () => { q.value = ''; sbox.classList.remove('has'); render(''); q.focus(); };
+q.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('qclear').click(); });
+
+// Overlay labels: auto (show when zoomed in), or forced on/off via the Labels button
+let labelMode = store.get('labelMode', 'auto');   // auto | on | off
+const lblBtn = document.getElementById('lblBtn'), mapEl = document.getElementById('map');
+function updateLabels() {
+  const show = labelMode === 'on' || (labelMode === 'auto' && map.getZoom() >= 4);
+  mapEl.classList.toggle('nolabels', !show);
+  lblBtn.textContent = 'Labels: ' + labelMode; lblBtn.classList.toggle('on', labelMode !== 'off');
+}
+lblBtn.onclick = () => { labelMode = { auto: 'on', on: 'off', off: 'auto' }[labelMode]; store.set('labelMode', labelMode); updateLabels(); };
+map.on('zoomend', updateLabels); updateLabels();
 document.getElementById('dClose').onclick = () => {
   document.getElementById('detail').classList.remove('on'); focusLayer.clearLayers(); current = null;
   document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active'));
