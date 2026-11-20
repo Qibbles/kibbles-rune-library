@@ -120,7 +120,7 @@ map.fitBounds(L.latLngBounds(toLL(0, 0), toLL(SURFACE_W, MAP_H)));
 // Game view rotation (45° clockwise, like the in-game isometric view)
 let rotated = store.get('rotated', true);
 const rotBtn = document.getElementById('rot');
-function applyRotation() { map.setBearing(rotated ? -45 : 0); rotBtn.classList.toggle('on', rotated); store.set('rotated', rotated); }
+function applyRotation() { map.setBearing(rotated ? 45 : 0); rotBtn.classList.toggle('on', rotated); store.set('rotated', rotated); }
 rotBtn.onclick = () => { rotated = !rotated; applyRotation(); };
 applyRotation();
 
