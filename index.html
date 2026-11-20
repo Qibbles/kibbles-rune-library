@@ -65,6 +65,12 @@
   .tools{position:absolute;right:10px;top:10px;z-index:700;display:flex;gap:6px}
   .tools .btn{background:rgba(21,23,29,.92)}
   .coords{position:absolute;right:10px;bottom:10px;z-index:500;background:rgba(14,15,19,.85);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .pin.hit{width:26px;height:26px;background:#ff4d6d;color:#fff;border:2px solid #fff;font-size:12px;position:relative;box-shadow:0 0 0 2px rgba(0,0,0,.6)}
+  .pin.hit::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid #ff4d6d;animation:pulse 1.6s ease-out infinite}
+  @keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(1.5);opacity:0}}
+  .leaflet-tooltip.lbl.hitlbl{background:#ff4d6d;color:#fff;font-size:12px}
+  #map.searching .leaflet-overlay-pane{opacity:.3}
+  #map.searching .leaflet-tooltip.lbl.ov{opacity:.3}
   .pin{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#1a1408;border:2px solid #1a1408;display:grid;place-items:center;font:700 10px Inter,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.6)}
   .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text);border:1px solid var(--line)}
   .leaflet-popup-content{margin:10px 12px;font:13px Inter,sans-serif;min-width:200px}
@@ -125,6 +131,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ==
 
 const map = L.map('map', { crs: L.CRS.Simple, renderer: L.svg({ padding: 0.5 }), minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
   rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
+map.createPane('searchPane').style.zIndex = 690;   // above overlay pins and labels, below popups
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
 const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
 const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
@@ -153,6 +160,19 @@ let overlays = new Set(store.get('overlays', []));   // keys: "<setId>|<bookId>"
 const bookKey = (s, b) => `${s.setId}|${b.id}`;
 const bookRunes = b => b.runeIds.map(id => RUNES[id]).filter(r => r && r.location);
 
+function hitIcon(label = '') {
+  return L.divIcon({ className: '', html: `<div class="pin hit">${esc(label)}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] });
+}
+function hitMarker(ll, r, b, label) {
+  return bindRune(L.marker(ll, { icon: hitIcon(label), pane: 'searchPane' }), r, b)
+    .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' });
+}
+let fitTimer = null;
+function fitHits(lls) {
+  clearTimeout(fitTimer);
+  if (!lls.length) return;
+  fitTimer = setTimeout(() => lls.length === 1 ? map.flyTo(lls[0], Math.max(map.getZoom(), 5)) : map.flyToBounds(L.latLngBounds(lls).pad(0.3), { maxZoom: 5 }), 450);
+}
 function pinIcon(label) {
   return L.divIcon({ className: '', html: `<div class="pin">${esc(label)}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] });
 }
@@ -298,8 +318,8 @@ function searchCoords(x, y, list) {
   const ll = toLL(x, y);
   const target = { fullName: `X ${x}, Y ${y}`, location: { x, y } };
   const from = worldPos(target) || { x, y, via: null };
-  L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin" style="background:#7fb3d5">✕</div>', iconSize: [22, 22], iconAnchor: [11, 11] }), zIndexOffset: 2000 })
-    .bindTooltip(`X ${x}, Y ${y}`, { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
+  L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin hit" style="background:#3fa9f5">✕</div>', iconSize: [26, 26], iconAnchor: [13, 13] }), pane: 'searchPane' })
+    .bindTooltip(`X ${x}, Y ${y}`, { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' }).addTo(focusLayer);
   map.flyTo(ll, Math.max(map.getZoom(), 5));
   const hits = [];
   DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => {
@@ -312,8 +332,7 @@ function searchCoords(x, y, list) {
   const wrap = document.createElement('div'); wrap.className = 'books';
   hits.slice(0, 25).forEach(({ s, b, r, d, via }) => {
     const rl = toLL(r.location.x, r.location.y);
-    const m = bindRune(L.marker(rl, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b)
-      .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
+    const m = hitMarker(rl, r, b).addTo(focusLayer);
     const el = document.createElement('div'); el.className = 'book';
     el.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(b.name)}${via ? ' · via entrance' : ''}</span></span><span class="count">${Math.round(d)} tiles</span>`;
     el.onclick = () => { map.flyTo(rl, Math.max(map.getZoom(), 5)); m.openPopup(); };
@@ -325,6 +344,7 @@ function searchCoords(x, y, list) {
 function render(filter = '') {
   const list = document.getElementById('list'); list.innerHTML = '';
   const f = filter.trim().toLowerCase(); const words = f.split(/\s+/);
+  document.getElementById('map').classList.toggle('searching', !!f);
   const cm = f.match(/^\s*(\d{1,4})\s*[,\s]\s*(\d{1,4})\s*$/);
   if (cm) { searchCoords(+cm[1], +cm[2], list); return; }
   if (f) {
@@ -335,16 +355,16 @@ function render(filter = '') {
     const box = document.createElement('div'); box.className = 'set';
     box.innerHTML = `<div style="padding:10px 12px" class="count">${hits.length} match${hits.length === 1 ? '' : 'es'}</div>`;
     const wrap = document.createElement('div'); wrap.className = 'books';
+    const lls = [];
     hits.slice(0, 300).forEach(({ s, b, r }) => {
       const ll = toLL(r.location.x, r.location.y);
-      const m = bindRune(L.marker(ll, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b)
-        .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
+      const m = hitMarker(ll, r, b).addTo(focusLayer); lls.push(ll);
       const d = document.createElement('div'); d.className = 'book';
       d.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(s.setName)} · ${esc(b.name)}</span></span><span class="count">${r.location.x}, ${r.location.y}</span>`;
       d.onclick = () => { map.flyTo(ll, 5); m.openPopup(); };
       wrap.appendChild(d);
     });
-    box.appendChild(wrap); list.appendChild(box);
+    box.appendChild(wrap); list.appendChild(box); fitHits(lls);
     return;
   }
   DATA.sets.forEach(s => {
