@@ -1,4 +1,4 @@
-# Rune Library (UO Outlands)
+# Kibble's Rune Library (UO Outlands)
 
 A static, self-hosted rune map for UO Outlands. Works on GitHub Pages as-is.
 
