@@ -48,9 +48,9 @@
   .btn{font:500 12px Inter,sans-serif;color:var(--text);background:#262a35;border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer;text-decoration:none}
   .btn:hover{border-color:var(--gold);color:var(--gold2)}
   .btn.on{border-color:var(--gold);color:var(--gold2)}
-  #detail{border-top:1px solid var(--line);max-height:42%;display:none;flex-direction:column}
+  #detail{position:absolute;right:10px;top:50px;bottom:48px;width:300px;z-index:650;background:rgba(21,23,29,.95);border:1px solid var(--line);border-radius:10px;display:none;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,.5);height:max-content;max-height:calc(100% - 98px)}
   #detail.on{display:flex}
-  #detail .hd{padding:10px 12px;display:flex;gap:8px;align-items:center}
+  #detail .hd{padding:10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px;display:flex;gap:8px;align-items:center}
   #detail .hd b{flex:1;font:700 14px Cinzel,serif;color:var(--gold2)}
   #runes{overflow:auto;padding:0 8px 10px;margin:0;list-style:none}
   #runes li{display:flex;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px}
@@ -77,6 +77,7 @@
   @media (max-width:760px){
     #app{flex-direction:column-reverse}
     aside{width:100%;min-width:0;height:45%}
+    #detail{width:auto;left:10px;top:auto;max-height:45%}
     main{height:55%}
   }
 </style>
@@ -91,13 +92,7 @@
       <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
     </header>
     <div id="list"></div>
-    <div id="detail">
-      <div class="hd"><b id="dTitle"></b>
-        <button class="btn" id="dExport" title="Download ClassicUO map markers">Export XML</button>
-        <button class="btn" id="dClose">✕</button>
-      </div>
-      <ol id="runes"></ol>
-    </div>
+</div>
   </aside>
   <main>
     <div id="map"></div>
@@ -105,7 +100,13 @@
       <button class="btn" id="lblBtn" title="Show rune names on overlay pins">Labels</button>
       <button class="btn" id="clearOv">Clear overlays</button>
     </div>
-    <div class="coords" id="coords">–</div>
+    <div id="detail">
+      <div class="hd"><b id="dTitle"></b>
+        <button class="btn" id="dExport" title="Download ClassicUO map markers">Export XML</button>
+        <button class="btn" id="dClose">✕</button>
+      </div>
+      <ol id="runes"></ol>
+        <div class="coords" id="coords">–</div>
   </main>
 </div>
 
