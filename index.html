@@ -119,7 +119,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ==
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
 const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
-  preferCanvas: true, rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
+  rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
 const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
 const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
@@ -145,13 +145,24 @@ function pinIcon(label) {
 }
 
 // Nearest rune from each overlay set (excluding the rune's own book)
+// Dungeon interiors sit beside the overworld; measure them from their overworld entrance instead
+let ENTR = {};
+function worldPos(r) {
+  if (r.location.x < SURFACE_W) return { x: r.location.x, y: r.location.y, via: null };
+  const base = r.fullName.replace(/\s+(level \d+|dungeon|(east|west|north|south) inside)$/i, '').toLowerCase();
+  const e = ENTR[base];
+  return e ? { x: e.location.x, y: e.location.y, via: e } : null;
+}
 function nearestHtml(r, ownBook) {
+  const from = worldPos(r);
+  if (!from) return '';
   const best = new Map();
   for (const s of DATA.sets) for (const b of s.books) {
     if (!overlays.has(bookKey(s, b)) || b === ownBook) continue;
     for (const o of bookRunes(b)) {
       if (o === r) continue;
-      const d = Math.hypot(o.location.x - r.location.x, o.location.y - r.location.y);
+      const to = worldPos(o); if (!to || to.via === r || o === from.via) continue;
+      const d = Math.hypot(to.x - from.x, to.y - from.y);
       const cur = best.get(s.setId);
       if (!cur || d < cur.d) best.set(s.setId, { d, o, s, b });
     }
@@ -159,7 +170,8 @@ function nearestHtml(r, ownBook) {
   if (!best.size) return '';
   const rows = [...best.values()].sort((a, b) => a.d - b.d).map(({ d, o, s, b }) =>
     `<div data-x="${o.location.x}" data-y="${o.location.y}"><span class="sw" style="background:${s.color}"></span><span>${esc(o.fullName)}<br><span class="pop-meta" style="margin:0">${esc(b.name)}</span></span><span class="d">${Math.round(d)} tiles</span></div>`).join('');
-  return `<div class="near"><div class="pop-meta" style="cursor:default">Nearest overlay runes</div>${rows}</div>`;
+  const via = from.via ? ` (from ${esc(from.via.fullName)})` : '';
+  return `<div class="near"><div class="pop-meta" style="cursor:default">Nearest overlay runes${via}</div>${rows}</div>`;
 }
 function popupHtml(r, book) {
   return `<b>${esc(r.fullName)}</b><div class="pop-meta">${book ? esc(book.name) + ' · ' : ''}X ${r.location.x}, Y ${r.location.y}</div>${nearestHtml(r, book)}`;
@@ -168,7 +180,11 @@ map.on('popupopen', e => {
   e.popup.getElement().querySelectorAll('.near div[data-x]').forEach(el => el.onclick = () =>
     map.flyTo(toLL(+el.dataset.x, +el.dataset.y), Math.max(map.getZoom(), 5)));
 });
-function bindRune(m, r, book) { m.bindPopup(() => popupHtml(r, book)); return m; }
+function bindRune(m, r, book) {
+  m.bindPopup(() => popupHtml(r, book), { autoPan: false });
+  m.on('mouseover', () => { if (!m.isPopupOpen()) m.openPopup(); });
+  return m;
+}
 
 // Overlays
 function drawOverlays() {
@@ -176,7 +192,7 @@ function drawOverlays() {
   for (const s of DATA.sets) for (const b of s.books) {
     if (!overlays.has(bookKey(s, b))) continue;
     for (const r of bookRunes(b)) {
-      bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 5, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b)
+      bindRune(L.circleMarker(toLL(r.location.x, r.location.y), { radius: 6, bubblingMouseEvents: false, color: '#000', weight: 1, fillColor: s.color, fillOpacity: 0.95 }), r, b)
         .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [6, 0], className: 'lbl ov' })
         .addTo(overlayLayer);
     }
@@ -299,6 +315,8 @@ document.getElementById('clearOv').onclick = () => { overlays.clear(); drawOverl
 fetch('data/library.json').then(r => r.json()).then(d => {
   DATA = d; RUNES = d.runes;
   Object.values(RUNES).forEach(r => r.fullName = r.fullName || r.shortName || r.id);
+  Object.values(RUNES).forEach(r => { if (r.location && r.location.x < SURFACE_W && /\s+entrance$/i.test(r.fullName))
+    ENTR[r.fullName.replace(/\s+entrance$/i, '').toLowerCase()] = r; });
   DATA.sets.sort((a, b) => a.setName.localeCompare(b.setName));
   DATA.sets.forEach((s, i) => s.color = s.color || PALETTE[i % PALETTE.length]);
   const nRunes = DATA.sets.reduce((n, s) => n + s.books.reduce((m, b) => m + b.runeIds.length, 0), 0);
