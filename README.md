@@ -1,6 +1,6 @@
 # Kibble's Rune Library (UO Outlands)
 
-**🗺️ Open the map: https://qibbles.github.io/kibbles-rune-library/**
+**🗺️ Open the map: https://runes.kibs.cc/**
 
 A static, self-hosted rune map for UO Outlands. Works on GitHub Pages as-is.
 
