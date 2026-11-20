@@ -93,7 +93,7 @@
     <header>
       <h1>Kibble's Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
-      <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
+      <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
       <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
     </header>
     <div id="list"></div>
@@ -292,9 +292,41 @@ function syncSetBox(s, box) {
   box.checked = n === s.books.length; box.indeterminate = n > 0 && n < s.books.length;
 }
 
+// Coordinate search: jump to X, Y and list the nearest runes from every set
+function searchCoords(x, y, list) {
+  focusLayer.clearLayers();
+  const ll = toLL(x, y);
+  const target = { fullName: `X ${x}, Y ${y}`, location: { x, y } };
+  const from = worldPos(target) || { x, y, via: null };
+  L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="pin" style="background:#7fb3d5">✕</div>', iconSize: [22, 22], iconAnchor: [11, 11] }), zIndexOffset: 2000 })
+    .bindTooltip(`X ${x}, Y ${y}`, { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
+  map.flyTo(ll, Math.max(map.getZoom(), 5));
+  const hits = [];
+  DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => {
+    const p = worldPos(r); if (!p) return;
+    hits.push({ s, b, r, d: Math.hypot(p.x - from.x, p.y - from.y), via: p.via });
+  })));
+  hits.sort((a, b) => a.d - b.d);
+  const box = document.createElement('div'); box.className = 'set';
+  box.innerHTML = `<div style="padding:10px 12px" class="count">Nearest runes to X ${x}, Y ${y}</div>`;
+  const wrap = document.createElement('div'); wrap.className = 'books';
+  hits.slice(0, 25).forEach(({ s, b, r, d, via }) => {
+    const rl = toLL(r.location.x, r.location.y);
+    const m = bindRune(L.marker(rl, { icon: pinIcon('•'), zIndexOffset: 1000 }), r, b)
+      .bindTooltip(esc(r.fullName), { permanent: true, direction: 'right', offset: [12, 0], className: 'lbl focus' }).addTo(focusLayer);
+    const el = document.createElement('div'); el.className = 'book';
+    el.innerHTML = `<span class="sw" style="background:${s.color}"></span><span class="nm">${esc(r.fullName)}<br><span class="count">${esc(b.name)}${via ? ' · via entrance' : ''}</span></span><span class="count">${Math.round(d)} tiles</span>`;
+    el.onclick = () => { map.flyTo(rl, Math.max(map.getZoom(), 5)); m.openPopup(); };
+    wrap.appendChild(el);
+  });
+  box.appendChild(wrap); list.appendChild(box);
+}
+
 function render(filter = '') {
   const list = document.getElementById('list'); list.innerHTML = '';
   const f = filter.trim().toLowerCase(); const words = f.split(/\s+/);
+  const cm = f.match(/^\s*(\d{1,4})\s*[,\s]\s*(\d{1,4})\s*$/);
+  if (cm) { searchCoords(+cm[1], +cm[2], list); return; }
   if (f) {
     focusLayer.clearLayers(); const hits = [];
     DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => {
