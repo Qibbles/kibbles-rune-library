@@ -194,7 +194,7 @@ map.on('popupopen', e => {
 let hoverTip = null;
 function hideHover() { if (hoverTip) { hoverTip.remove(); hoverTip = null; } }
 function bindRune(m, r, book) {
-  m.bindPopup(() => popupHtml(r, book), { autoPan: false, closeOnClick: false });
+  m.bindPopup(() => popupHtml(r, book), { autoPan: true, autoPanPaddingTopLeft: [20, 60], autoPanPaddingBottomRight: [340, 40], closeOnClick: false });
   m.off('click', m._openPopup);
   m.on('click', e => { L.DomEvent.stop(e); hideHover(); if (!m.isPopupOpen()) m.openPopup(); });
   m.on('mouseover', () => {
