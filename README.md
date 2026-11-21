@@ -6,6 +6,7 @@ A static, self-hosted rune map for UO Outlands. Works on GitHub Pages as-is.
 
 ## Files
 - `index.html`: the whole app (Leaflet map, sidebar, search, ClassicUO XML export)
+- `data/creatures.json`: creature spawn locations, decoded from [Outlands Butler](https://www.outlandsbutler.com/creaturelibrary)'s creature library (credit to them). Format: `{ n: name, s: [[spot, x, y]], d: [dungeon levels] }`
 - `data/library.json`: all sets, books and runes. Edit this to add or change runes.
 - `tiles/{z}/{x}/{y}.png`: map tiles rendered from the Outlands client (zoom 0–5, z5 = 1 px per game tile)
 

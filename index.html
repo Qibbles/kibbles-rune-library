@@ -65,6 +65,7 @@
   .tools{position:absolute;right:10px;top:10px;z-index:700;display:flex;gap:6px}
   .tools .btn{background:rgba(21,23,29,.92)}
   .coords{position:absolute;right:10px;bottom:10px;z-index:500;background:rgba(14,15,19,.85);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ctag{font-size:10px;font-weight:600;color:#1a1408;background:#c48bf0;border-radius:4px;padding:1px 5px;margin-left:6px}
   .pin.hit{width:26px;height:26px;background:#ff4d6d;color:#fff;border:2px solid #fff;font-size:12px;position:relative;box-shadow:0 0 0 2px rgba(0,0,0,.6)}
   .pin.hit::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid #ff4d6d;animation:pulse 1.6s ease-out infinite}
   @keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(1.5);opacity:0}}
@@ -99,8 +100,8 @@
     <header>
       <h1>Kibble's Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
-      <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
-      <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
+      <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes, creatures or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
+      <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it. Creature data from <a href="https://www.outlandsbutler.com/creaturelibrary" target="_blank" rel="noopener" style="color:var(--gold)">Outlands Butler</a>.</div>
     </header>
     <div id="list"></div>
   </aside>
@@ -293,6 +294,7 @@ function showBook(set, book, el) {
     ol.appendChild(li);
   });
   document.getElementById('dTitle').textContent = `${book.name} (${rs.length})`;
+  document.getElementById('dExport').style.display = '';
   document.getElementById('detail').classList.add('on');
   if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.3), { maxZoom: 5 });
 }
@@ -310,6 +312,59 @@ function exportXml(name, runes) {
 function syncSetBox(s, box) {
   const n = s.books.filter(b => overlays.has(bookKey(s, b))).length;
   box.checked = n === s.books.length; box.indeterminate = n > 0 && n < s.books.length;
+}
+
+// Creatures (decoded from Outlands Butler's creature library), loaded on first search
+let CREATURES = null, creaturesLoading = null, ALLRUNES = null;
+function loadCreatures() {
+  if (!creaturesLoading) creaturesLoading = fetch('data/creatures.json').then(r => r.json()).then(d => { CREATURES = d; }).catch(() => { CREATURES = []; });
+  return creaturesLoading;
+}
+function allRunes() {
+  if (!ALLRUNES) { ALLRUNES = []; DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => { const p = worldPos(r); if (p) ALLRUNES.push({ s, b, r, p }); }))); }
+  return ALLRUNES;
+}
+function nearestRunes(x, y, n = 3) {
+  return allRunes().map(o => ({ ...o, d: Math.hypot(o.p.x - x, o.p.y - y) })).sort((a, b) => a.d - b.d).slice(0, n);
+}
+function dungeonEntrance(name) {
+  const base = name.replace(/\s+level.*$/i, '').replace(/^the\s+/i, '').toLowerCase();
+  return ENTR[base] || null;
+}
+function showCreature(c) {
+  current = null;
+  document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active'));
+  focusLayer.clearLayers();
+  const ol = document.getElementById('runes'); ol.innerHTML = ''; const lls = [];
+  c.s.forEach(([name, x, y], i) => {
+    const ll = toLL(x, y); lls.push(ll);
+    const near = nearestRunes(x, y, 3);
+    const html = `<b>${esc(c.n)}</b><div class="pop-meta">${esc(name)} · X ${x}, Y ${y}</div><div class="near"><div class="pop-meta" style="cursor:default">Nearest runes</div>` +
+      near.map(o => `<div data-x="${o.r.location.x}" data-y="${o.r.location.y}"><span class="sw" style="background:${o.s.color}"></span><span>${esc(o.r.fullName)}<br><span class="pop-meta" style="margin:0">${esc(o.b.name)}</span></span><span class="d">${Math.round(o.d)} tiles</span></div>`).join('') + '</div>';
+    const m = L.marker(ll, { icon: hitIcon(i + 1), pane: 'searchPane' }).bindPopup(html, { autoPan: true, autoPanPaddingTopLeft: [20, 60], autoPanPaddingBottomRight: [340, 40], closeOnClick: false })
+      .bindTooltip(esc(name), { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' }).addTo(focusLayer);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="n">${i + 1}</span><span>${esc(name)}<br><span class="count">Nearest: ${esc(near[0] ? near[0].r.fullName + ' (' + Math.round(near[0].d) + ' tiles)' : '—')}</span></span><span class="c">${x}, ${y}</span>`;
+    li.onclick = () => { map.flyTo(ll, Math.max(map.getZoom(), 5)); m.openPopup(); };
+    ol.appendChild(li);
+  });
+  (c.d || []).forEach(dn => {
+    const e = dungeonEntrance(dn);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="n">⌂</span><span>${esc(dn)}<br><span class="count">${e ? 'Entrance: ' + esc(e.fullName) : 'Dungeon'}</span></span>${e ? `<span class="c">${e.location.x}, ${e.location.y}</span>` : ''}`;
+    if (e) {
+      const ll = toLL(e.location.x, e.location.y); lls.push(ll);
+      L.marker(ll, { icon: hitIcon('⌂'), pane: 'searchPane', interactive: false })
+        .bindTooltip(esc(dn), { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' }).addTo(focusLayer);
+      li.onclick = () => map.flyTo(ll, Math.max(map.getZoom(), 5));
+    }
+    ol.appendChild(li);
+  });
+  if (!c.s.length && !(c.d || []).length) ol.innerHTML = '<li><span>No known locations</span></li>';
+  document.getElementById('dTitle').textContent = c.n;
+  document.getElementById('dExport').style.display = 'none';
+  document.getElementById('detail').classList.add('on');
+  fitHits(lls);
 }
 
 // Coordinate search: jump to X, Y and list the nearest runes from every set
@@ -349,12 +404,28 @@ function render(filter = '') {
   const cm = f.match(/^\s*(\d{1,4})\s*[,\s]\s*(\d{1,4})\s*$/);
   if (cm) { searchCoords(+cm[1], +cm[2], list); return; }
   if (f) {
+    if (!CREATURES) loadCreatures().then(() => { if (q.value.trim().toLowerCase() === f) render(q.value); });
+    const cHits = (CREATURES || []).filter(c => words.every(w => c.n.toLowerCase().includes(w)));
+    if (cHits.length) {
+      const cbox = document.createElement('div'); cbox.className = 'set';
+      cbox.innerHTML = `<div style="padding:10px 12px" class="count">${cHits.length} creature${cHits.length === 1 ? '' : 's'}</div>`;
+      const cw = document.createElement('div'); cw.className = 'books';
+      cHits.slice(0, 40).forEach(c => {
+        const d = document.createElement('div'); d.className = 'book';
+        const info = [c.s.length ? `${c.s.length} spot${c.s.length === 1 ? '' : 's'}` : '', (c.d || []).length ? `${c.d.length} dungeon level${c.d.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') || 'no known location';
+        d.innerHTML = `<span class="nm">${esc(c.n)}<span class="ctag">creature</span><br><span class="count">${info}</span></span>`;
+        d.onclick = () => { document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active')); d.classList.add('active'); showCreature(c); };
+        cw.appendChild(d);
+      });
+      cbox.appendChild(cw); list.appendChild(cbox);
+    }
     focusLayer.clearLayers(); const hits = [];
     DATA.sets.forEach(s => s.books.forEach(b => bookRunes(b).forEach(r => {
       if (words.every(w => r.fullName.toLowerCase().includes(w))) hits.push({ s, b, r });
     })));
+    if (!hits.length && cHits.length) { fitHits([]); return; }
     const box = document.createElement('div'); box.className = 'set';
-    box.innerHTML = `<div style="padding:10px 12px" class="count">${hits.length} match${hits.length === 1 ? '' : 'es'}</div>`;
+    box.innerHTML = `<div style="padding:10px 12px" class="count">${hits.length} rune match${hits.length === 1 ? '' : 'es'}</div>`;
     const wrap = document.createElement('div'); wrap.className = 'books';
     const lls = [];
     hits.slice(0, 300).forEach(({ s, b, r }) => {
