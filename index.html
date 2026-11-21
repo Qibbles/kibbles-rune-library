@@ -66,6 +66,11 @@
   .tools .btn{background:rgba(21,23,29,.92)}
   .coords{position:absolute;right:10px;bottom:10px;z-index:500;background:rgba(14,15,19,.85);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .ctag{font-size:10px;font-weight:600;color:#1a1408;background:#c48bf0;border-radius:4px;padding:1px 5px;margin-left:6px}
+  .mkicon{filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
+  .stairs{width:20px;height:20px;border-radius:5px;background:rgba(14,15,19,.85);border:1px solid #d6b25e;display:grid;place-items:center;cursor:pointer}
+  .stairs img{width:16px;height:16px;image-rendering:pixelated}
+  .stairs.surf{width:24px;height:22px}
+  .stairs.surf img{width:21px;height:18px}
   .pin.hit{width:26px;height:26px;background:#ff4d6d;color:#fff;border:2px solid #fff;font-size:12px;position:relative;box-shadow:0 0 0 2px rgba(0,0,0,.6)}
   .pin.hit::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid #ff4d6d;animation:pulse 1.6s ease-out infinite}
   @keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(1.5);opacity:0}}
@@ -108,7 +113,7 @@
   <main>
     <div id="map"></div>
     <div class="tools">
-      <button class="btn" id="gateBtn" title="Show red and yellow moongates inside dungeons">Moongates</button>
+      <button class="btn" id="gateBtn" title="Show moongates and dungeon stairs">Gates &amp; stairs</button>
       <button class="btn" id="lblBtn" title="Show rune names on overlay pins">Labels</button>
       <button class="btn" id="clearOv">Clear overlays</button>
     </div>
@@ -385,22 +390,39 @@ function showCreature(c) {
   fitHits(lls);
 }
 
-// Dungeon moongates (red / yellow), aligned from Outlands Butler's dungeon maps
+// Moongates (world: blue; dungeons: red / yellow) and dungeon stairs, aligned from Outlands Butler's dungeon maps
 const gateLayer = L.layerGroup();
 let gatesOn = store.get('gatesOn', true), gatesLoaded = false;
 const gateBtn = document.getElementById('gateBtn');
+const icon = (url, w, h, cls = '') => L.icon({ iconUrl: url, iconSize: [w, h], iconAnchor: [w / 2, h / 2], className: 'mkicon ' + cls });
+const ICONS = {
+  R: icon('icons/gate-red.png', 12, 24), Y: icon('icons/gate-yellow.png', 12, 24), W: icon('icons/moongate.png', 26, 26),
+  S: L.divIcon({ className: '', html: '<div class="stairs"><img src="icons/stairs.png" alt=""></div>', iconSize: [20, 20], iconAnchor: [10, 10] }),
+  E: L.divIcon({ className: '', html: '<div class="stairs surf"><img src="icons/stairs-surface.png" alt=""></div>', iconSize: [24, 22], iconAnchor: [12, 11] })
+};
 function loadGates() {
   if (gatesLoaded) return; gatesLoaded = true;
-  fetch('data/dungeon-gates.json').then(r => r.json()).then(rows => rows.forEach(([t, x, y, lvl]) => {
-    const red = t === 'R';
-    L.circleMarker(toLL(x, y), { radius: 7, weight: 2, color: '#fff', fillColor: red ? '#e5484d' : '#f5d90a', fillOpacity: 1, bubblingMouseEvents: false })
-      .bindTooltip(`${red ? 'Red' : 'Yellow'} moongate · ${esc(lvl)}`, { direction: 'top', offset: [0, -6] })
-      .addTo(gateLayer);
-  })).catch(() => {});
+  fetch('data/dungeon-markers.json').then(r => r.json()).then(d => {
+    d.world.forEach(([name, x, y]) => L.marker(toLL(x, y), { icon: ICONS.W }).bindTooltip(esc(name), { direction: 'top', offset: [0, -12] }).addTo(gateLayer));
+    d.gates.forEach(([t, x, y, lvl]) => L.marker(toLL(x, y), { icon: ICONS[t] })
+      .bindTooltip(`${t === 'R' ? 'Red' : 'Yellow'} moongate · ${esc(lvl)}`, { direction: 'top', offset: [0, -12] }).addTo(gateLayer));
+    d.stairs.forEach(([x, y, lvl, label, tx, ty, tname]) => {
+      const surf = label.startsWith('Dungeon entrance');
+      const m = L.marker(toLL(x, y), { icon: surf ? ICONS.E : ICONS.S })
+        .bindTooltip(`<b>${esc(label)}</b><br>${esc(lvl)}${tname ? `<br><span style="color:#9a968c">Click to go to ${esc(tname)}</span>` : ''}`, { direction: 'top', offset: [0, -12] })
+        .addTo(gateLayer);
+      if (tx != null) m.on('click', () => { map.flyTo(toLL(tx, ty), Math.max(map.getZoom(), 5)); flashAt(tx, ty); });
+    });
+  }).catch(() => {});
+}
+// brief pulsing ring where a stair leads to
+function flashAt(x, y) {
+  const f = L.marker(toLL(x, y), { icon: L.divIcon({ className: '', html: '<div class="pin hit" style="opacity:.9"></div>', iconSize: [26, 26], iconAnchor: [13, 13] }), pane: 'searchPane', interactive: false }).addTo(map);
+  setTimeout(() => f.remove(), 3500);
 }
 function applyGates() {
   if (gatesOn) { loadGates(); gateLayer.addTo(map); } else gateLayer.remove();
-  gateBtn.textContent = 'Moongates: ' + (gatesOn ? 'on' : 'off'); gateBtn.classList.toggle('on', gatesOn); store.set('gatesOn', gatesOn);
+  gateBtn.textContent = 'Gates & stairs: ' + (gatesOn ? 'on' : 'off'); gateBtn.classList.toggle('on', gatesOn); store.set('gatesOn', gatesOn);
 }
 gateBtn.onclick = () => { gatesOn = !gatesOn; applyGates(); };
 
