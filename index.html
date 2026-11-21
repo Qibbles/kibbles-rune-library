@@ -55,7 +55,7 @@
   #detail.on{display:flex}
   #detail .hd{padding:10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px;display:flex;gap:8px;align-items:center}
   #detail .hd b{flex:1;font:700 14px Cinzel,serif;color:var(--gold2)}
-  #runes{overflow:auto;padding:0 8px 10px;margin:0;list-style:none}
+  #runes{overflow-y:auto;overflow-x:hidden;padding:0 8px 10px;margin:0;list-style:none}
   #runes li{display:flex;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px}
   #runes li:hover{background:#262a35}
   #runes .n{width:22px;text-align:right;color:var(--gold);flex:none}
@@ -329,7 +329,11 @@ function nearestRunes(x, y, n = 3) {
 }
 function dungeonEntrance(name) {
   const base = name.replace(/\s+level.*$/i, '').replace(/^the\s+/i, '').toLowerCase();
-  return ENTR[base] || null;
+  if (ENTR[base]) return ENTR[base];
+  // fallback: any overworld rune mentioning the dungeon, preferring "entrance" ones
+  const c = allRunes().filter(o => o.r.location.x < SURFACE_W && o.r.fullName.toLowerCase().includes(base));
+  c.sort((a, b) => (/entrance/i.test(b.r.fullName) - /entrance/i.test(a.r.fullName)) || a.r.fullName.length - b.r.fullName.length);
+  return c.length ? c[0].r : null;
 }
 function showCreature(c) {
   current = null;
