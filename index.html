@@ -132,6 +132,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script>
+const DATA_VERSION = '202611212134';   // bump on every data update so browsers fetch fresh files
 const MAP_W = 8960, MAP_H = 4096, NATIVE = 5, SURFACE_W = 4736;
 const PALETTE = ['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00c2a8','#e6beff','#ffffff','#fffac8','#aaffc3','#ffd8b1'];
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -324,7 +325,7 @@ function syncSetBox(s, box) {
 // Creatures (decoded from Outlands Butler's creature library), loaded on first search
 let CREATURES = null, creaturesLoading = null, ALLRUNES = null;
 function loadCreatures() {
-  if (!creaturesLoading) creaturesLoading = fetch('data/creatures.json').then(r => r.json()).then(d => { CREATURES = d; }).catch(() => { CREATURES = []; });
+  if (!creaturesLoading) creaturesLoading = fetch('data/creatures.json?v=' + DATA_VERSION).then(r => r.json()).then(d => { CREATURES = d; }).catch(() => { CREATURES = []; });
   return creaturesLoading;
 }
 function allRunes() {
@@ -405,7 +406,7 @@ const ICONS = {
 };
 function loadGates() {
   if (gatesLoaded) return; gatesLoaded = true;
-  fetch('data/dungeon-markers.json').then(r => r.json()).then(d => {
+  fetch('data/dungeon-markers.json?v=' + DATA_VERSION).then(r => r.json()).then(d => {
     (d.areas || []).forEach(([name, x, y]) => L.marker(toLL(x, y), { icon: L.divIcon({ className: '', html: '', iconSize: [0, 0] }), interactive: false })
       .bindTooltip(esc(name), { permanent: true, direction: 'top', offset: [0, -4], className: 'lbl arealbl' }).addTo(areaLayer));
     d.world.forEach(([name, x, y]) => L.marker(toLL(x, y), { icon: ICONS.W }).bindTooltip(esc(name), { direction: 'top', offset: [0, -12] }).addTo(gateLayer));
@@ -558,7 +559,7 @@ document.getElementById('dClose').onclick = () => {
 document.getElementById('dExport').onclick = () => current && exportXml(current.book.name, bookRunes(current.book));
 document.getElementById('clearOv').onclick = () => { overlays.clear(); drawOverlays(); render(document.getElementById('q').value); };
 
-fetch('data/library.json').then(r => r.json()).then(d => {
+fetch('data/library.json?v=' + DATA_VERSION).then(r => r.json()).then(d => {
   DATA = d; RUNES = d.runes;
   Object.values(RUNES).forEach(r => r.fullName = r.fullName || r.shortName || r.id);
   Object.values(RUNES).forEach(r => { if (r.location && r.location.x < SURFACE_W && /\s+entrance$/i.test(r.fullName))
