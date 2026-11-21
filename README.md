@@ -8,6 +8,8 @@ A static, self-hosted rune map for UO Outlands. Works on GitHub Pages as-is.
 - `index.html`: the whole app (Leaflet map, sidebar, search, ClassicUO XML export)
 - `data/creatures.json`: creature spawn locations, decoded from [Outlands Butler](https://www.outlandsbutler.com/creaturelibrary)'s creature library (credit to them). Format: `{ n: name, s: [[spot, x, y]] (overworld), ds: [[dungeon level, x, y]] (inside dungeons, aligned to this map), d: [dungeon levels without a placed position] }`
 - `data/library.json`: all sets, books and runes. Edit this to add or change runes.
+- Extra strip at x 7680+: the lava island from the client's map5 (Inferno Level 2), plus 4 dungeon levels shown as Outlands Butler's level pictures (Shadowspire Cathedral 3, Darkmire Temple 3.5, Ossuary 4, Tidal Tomb 3) because they aren't in the rendered client maps
+- `data/dungeon-markers.json`: world moongates, dungeon red/yellow moongates, stairs (with destinations) and labels for the extra areas
 - `tiles/{z}/{x}/{y}.png`: map tiles rendered from the Outlands client (zoom 0–5, z5 = 1 px per game tile)
 
 ## Editing runes

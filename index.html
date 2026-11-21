@@ -66,6 +66,7 @@
   .tools .btn{background:rgba(21,23,29,.92)}
   .coords{position:absolute;right:10px;bottom:10px;z-index:500;background:rgba(14,15,19,.85);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .ctag{font-size:10px;font-weight:600;color:#1a1408;background:#c48bf0;border-radius:4px;padding:1px 5px;margin-left:6px}
+  .leaflet-tooltip.lbl.arealbl{background:rgba(214,178,94,.92);color:#1a1408;font-size:12px}
   .mkicon{filter:drop-shadow(0 0 2px rgba(0,0,0,.9))}
   .stairs{width:26px;height:26px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.7)}
   .stairs svg{width:16px;height:16px}
@@ -131,7 +132,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script>
-const MAP_W = 7680, MAP_H = 4096, NATIVE = 5, SURFACE_W = 4736;
+const MAP_W = 8960, MAP_H = 4096, NATIVE = 5, SURFACE_W = 4736;
 const PALETTE = ['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00c2a8','#e6beff','#ffffff','#fffac8','#aaffc3','#ffd8b1'];
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
@@ -391,7 +392,7 @@ function showCreature(c) {
 }
 
 // Moongates (world: blue; dungeons: red / yellow) and dungeon stairs, aligned from Outlands Butler's dungeon maps
-const gateLayer = L.layerGroup();
+const gateLayer = L.layerGroup(); const areaLayer = L.layerGroup().addTo(map);
 let gatesOn = store.get('gatesOn', true), gatesLoaded = false;
 const gateBtn = document.getElementById('gateBtn');
 const icon = (url, w, h, cls = '') => L.icon({ iconUrl: url, iconSize: [w, h], iconAnchor: [w / 2, h / 2], className: 'mkicon ' + cls });
@@ -405,6 +406,8 @@ const ICONS = {
 function loadGates() {
   if (gatesLoaded) return; gatesLoaded = true;
   fetch('data/dungeon-markers.json').then(r => r.json()).then(d => {
+    (d.areas || []).forEach(([name, x, y]) => L.marker(toLL(x, y), { icon: L.divIcon({ className: '', html: '', iconSize: [0, 0] }), interactive: false })
+      .bindTooltip(esc(name), { permanent: true, direction: 'top', offset: [0, -4], className: 'lbl arealbl' }).addTo(areaLayer));
     d.world.forEach(([name, x, y]) => L.marker(toLL(x, y), { icon: ICONS.W }).bindTooltip(esc(name), { direction: 'top', offset: [0, -12] }).addTo(gateLayer));
     d.gates.forEach(([t, x, y, lvl]) => L.marker(toLL(x, y), { icon: ICONS[t] })
       .bindTooltip(`${t === 'R' ? 'Red' : 'Yellow'} moongate · ${esc(lvl)}`, { direction: 'top', offset: [0, -12] }).addTo(gateLayer));
@@ -425,7 +428,7 @@ function flashAt(x, y) {
   setTimeout(() => f.remove(), 3500);
 }
 function applyGates() {
-  if (gatesOn) { loadGates(); gateLayer.addTo(map); } else gateLayer.remove();
+  loadGates(); if (gatesOn) gateLayer.addTo(map); else gateLayer.remove();
   gateBtn.textContent = 'Gates & stairs: ' + (gatesOn ? 'on' : 'off'); gateBtn.classList.toggle('on', gatesOn); store.set('gatesOn', gatesOn);
 }
 gateBtn.onclick = () => { gatesOn = !gatesOn; applyGates(); };
