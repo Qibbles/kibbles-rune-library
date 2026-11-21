@@ -132,7 +132,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ==
 
 const map = L.map('map', { crs: L.CRS.Simple, minZoom: 1, maxZoom: 7, zoomSnap: 0.5, attributionControl: false,
   rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false });
-map.createPane('searchPane').style.zIndex = 690;   // above overlay pins and labels, below popups
+map.createPane('searchPane', map._norotatePane || undefined).style.zIndex = 690;   // above overlay pins and labels, below popups (same stacking context as popupPane)
 const toLL = (x, y) => map.unproject([x + 0.5, y + 0.5], NATIVE);
 const toXY = ll => { const p = map.project(ll, NATIVE); return [Math.floor(p.x), Math.floor(p.y)]; };
 const bounds = L.latLngBounds(toLL(0, 0), toLL(MAP_W, MAP_H));
@@ -224,7 +224,7 @@ function bindRune(m, r, book) {
   m.on('mouseover', () => {
     if (m.isPopupOpen()) return;
     hideHover();
-    hoverTip = L.tooltip({ className: 'hovertip', direction: 'top', offset: [0, -12], opacity: 1 })
+    hoverTip = L.tooltip({ className: 'hovertip', direction: 'top', offset: [0, -12], opacity: 1, pane: 'popupPane' })
       .setLatLng(m.getLatLng()).setContent(popupHtml(r, book)).addTo(map);
   });
   m.on('mouseout', hideHover);
