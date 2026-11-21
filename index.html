@@ -108,6 +108,7 @@
   <main>
     <div id="map"></div>
     <div class="tools">
+      <button class="btn" id="gateBtn" title="Show red and yellow moongates inside dungeons">Moongates</button>
       <button class="btn" id="lblBtn" title="Show rune names on overlay pins">Labels</button>
       <button class="btn" id="clearOv">Clear overlays</button>
     </div>
@@ -384,6 +385,25 @@ function showCreature(c) {
   fitHits(lls);
 }
 
+// Dungeon moongates (red / yellow), aligned from Outlands Butler's dungeon maps
+const gateLayer = L.layerGroup();
+let gatesOn = store.get('gatesOn', true), gatesLoaded = false;
+const gateBtn = document.getElementById('gateBtn');
+function loadGates() {
+  if (gatesLoaded) return; gatesLoaded = true;
+  fetch('data/dungeon-gates.json').then(r => r.json()).then(rows => rows.forEach(([t, x, y, lvl]) => {
+    const red = t === 'R';
+    L.circleMarker(toLL(x, y), { radius: 7, weight: 2, color: '#fff', fillColor: red ? '#e5484d' : '#f5d90a', fillOpacity: 1, bubblingMouseEvents: false })
+      .bindTooltip(`${red ? 'Red' : 'Yellow'} moongate · ${esc(lvl)}`, { direction: 'top', offset: [0, -6] })
+      .addTo(gateLayer);
+  })).catch(() => {});
+}
+function applyGates() {
+  if (gatesOn) { loadGates(); gateLayer.addTo(map); } else gateLayer.remove();
+  gateBtn.textContent = 'Moongates: ' + (gatesOn ? 'on' : 'off'); gateBtn.classList.toggle('on', gatesOn); store.set('gatesOn', gatesOn);
+}
+gateBtn.onclick = () => { gatesOn = !gatesOn; applyGates(); };
+
 // Coordinate search: jump to X, Y and list the nearest runes from every set
 function searchCoords(x, y, list) {
   focusLayer.clearLayers();
@@ -519,7 +539,7 @@ fetch('data/library.json').then(r => r.json()).then(d => {
   const nRunes = DATA.sets.reduce((n, s) => n + s.books.reduce((m, b) => m + b.runeIds.length, 0), 0);
   const nBooks = DATA.sets.reduce((n, s) => n + s.books.length, 0);
   document.getElementById('stats').textContent = `${DATA.sets.length} sets · ${nBooks} books · ${nRunes} runes`;
-  render(); drawOverlays();
+  render(); drawOverlays(); applyGates();
 }).catch(err => { document.getElementById('stats').textContent = 'Could not load data/library.json'; console.error(err); });
 </script>
 </body>
