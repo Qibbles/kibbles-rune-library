@@ -1,0 +1,1 @@
+- SC|1 "Dungeon Entry" at image 20x267 (map 5100,2537): not present in game (reported by user). Removed from data/dungeon-markers.json.

@@ -1,0 +1,42 @@
+{
+ "SC|3": {
+  "x": 7720,
+  "y": 1380,
+  "w": 173,
+  "h": 150,
+  "name": "Shadowspire Cathedral Level 3",
+  "src": "butler"
+ },
+ "DT|3.5": {
+  "x": 7953,
+  "y": 1380,
+  "w": 122,
+  "h": 150,
+  "name": "Darkmire Temple Level 3.5",
+  "src": "butler"
+ },
+ "OS|4": {
+  "x": 8135,
+  "y": 1380,
+  "w": 87,
+  "h": 150,
+  "name": "Ossuary Level 4",
+  "src": "butler"
+ },
+ "TT|3": {
+  "x": 8282,
+  "y": 1380,
+  "w": 100,
+  "h": 150,
+  "name": "Tidal Tomb Level 3",
+  "src": "butler"
+ },
+ "IN|2": {
+  "x": 8080,
+  "y": 560,
+  "w": 440,
+  "h": 400,
+  "name": "Inferno Level 2",
+  "src": "map5"
+ }
+}

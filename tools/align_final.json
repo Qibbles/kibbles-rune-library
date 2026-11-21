@@ -1,0 +1,456 @@
+{
+ "AK|1": {
+  "score": 0.954,
+  "scale": 3.8,
+  "x": 5877,
+  "y": 49,
+  "w": 127,
+  "h": 158,
+  "name": "Aegis Keep Level 1"
+ },
+ "AK|2": {
+  "score": 0.965,
+  "scale": 4.72,
+  "x": 5845,
+  "y": 220,
+  "w": 89,
+  "h": 127,
+  "name": "Aegis Keep Level 2"
+ },
+ "AK|3": {
+  "score": 0.815,
+  "scale": 3.36,
+  "x": 5941,
+  "y": 206,
+  "w": 122,
+  "h": 179,
+  "name": "Aegis Keep Level 3"
+ },
+ "AK|4": {
+  "score": 0.826,
+  "scale": 5.12,
+  "x": 5902,
+  "y": 348,
+  "w": 139,
+  "h": 117,
+  "name": "Aegis Keep Level 4"
+ },
+ "AK|1.5": {
+  "score": 0.861,
+  "scale": 6.3,
+  "x": 5726,
+  "y": 176,
+  "w": 50,
+  "h": 95,
+  "name": "Aegis Keep Level 1.5"
+ },
+ "AK|2.5": {
+  "score": 0.965,
+  "scale": 4.72,
+  "x": 5845,
+  "y": 220,
+  "w": 89,
+  "h": 127,
+  "name": "Aegis Keep Level 2.5"
+ },
+ "CV|1": {
+  "score": 0.903,
+  "scale": 3.08,
+  "x": 5891,
+  "y": 483,
+  "w": 221,
+  "h": 195,
+  "name": "Cavernam Level 1"
+ },
+ "CV|2": {
+  "score": 0.805,
+  "scale": 5.4,
+  "x": 5874,
+  "y": 737,
+  "w": 186,
+  "h": 111,
+  "name": "Cavernam Level 2"
+ },
+ "CV|3": {
+  "score": 0.859,
+  "scale": 2.28,
+  "x": 5882,
+  "y": 891,
+  "w": 197,
+  "h": 263,
+  "name": "Cavernam Level 3"
+ },
+ "CV|3.5": {
+  "score": 0.859,
+  "scale": 2.28,
+  "x": 5882,
+  "y": 891,
+  "w": 197,
+  "h": 263,
+  "name": "Cavernam Level 3.5"
+ },
+ "DT|1": {
+  "score": 0.887,
+  "scale": 3.86,
+  "x": 5145,
+  "y": 1892,
+  "w": 140,
+  "h": 155,
+  "name": "Darkmire Temple Level 1"
+ },
+ "DT|2": {
+  "score": 0.889,
+  "scale": 3.56,
+  "x": 5321,
+  "y": 1933,
+  "w": 111,
+  "h": 169,
+  "name": "Darkmire Temple Level 2"
+ },
+ "DT|3": {
+  "score": 0.779,
+  "scale": 2.98,
+  "x": 5530,
+  "y": 1954,
+  "w": 110,
+  "h": 201,
+  "name": "Darkmire Temple Level 3"
+ },
+ "IN|1": {
+  "score": 0.891,
+  "scale": 2.74,
+  "x": 5792,
+  "y": 1896,
+  "w": 206,
+  "h": 219,
+  "name": "Inferno Level 1"
+ },
+ "KH|1": {
+  "score": 0.898,
+  "scale": 2.74,
+  "x": 7188,
+  "y": 244,
+  "w": 203,
+  "h": 219,
+  "name": "Kraul Hive Level 1"
+ },
+ "KH|2": {
+  "score": 0.853,
+  "scale": 3.94,
+  "x": 7274,
+  "y": 76,
+  "w": 259,
+  "h": 152,
+  "name": "Kraul Hive Level 2"
+ },
+ "KH|3": {
+  "score": 0.773,
+  "scale": 2.56,
+  "x": 7448,
+  "y": 204,
+  "w": 197,
+  "h": 234,
+  "name": "Kraul Hive Level 3"
+ },
+ "MP|1": {
+  "score": 0.81,
+  "scale": 6.3,
+  "x": 5490,
+  "y": 2742,
+  "w": 162,
+  "h": 95,
+  "name": "Mount Petram Level 1"
+ },
+ "MP|2": {
+  "score": 0.767,
+  "scale": 4.86,
+  "x": 5541,
+  "y": 2838,
+  "w": 106,
+  "h": 123,
+  "name": "Mount Petram Level 2"
+ },
+ "MP|3": {
+  "score": 0.878,
+  "scale": 3.08,
+  "x": 5672,
+  "y": 2757,
+  "w": 168,
+  "h": 195,
+  "name": "Mount Petram Level 3"
+ },
+ "NU|1": {
+  "score": 0.933,
+  "scale": 5.36,
+  "x": 5742,
+  "y": 1668,
+  "w": 132,
+  "h": 112,
+  "name": "Nusero Level 1"
+ },
+ "NU|2": {
+  "score": 0.792,
+  "scale": 3.58,
+  "x": 5796,
+  "y": 1469,
+  "w": 150,
+  "h": 168,
+  "name": "Nusero Level 2"
+ },
+ "NU|3": {
+  "score": 0.904,
+  "scale": 2.36,
+  "x": 5919,
+  "y": 1559,
+  "w": 228,
+  "h": 254,
+  "name": "Nusero Level 3"
+ },
+ "OS|1": {
+  "score": 0.885,
+  "scale": 5.2,
+  "x": 5782,
+  "y": 1268,
+  "w": 158,
+  "h": 115,
+  "name": "Ossuary Level 1"
+ },
+ "OS|2": {
+  "score": 0.798,
+  "scale": 3.98,
+  "x": 5601,
+  "y": 1218,
+  "w": 91,
+  "h": 151,
+  "name": "Ossuary Level 2"
+ },
+ "OS|3": {
+  "score": 0.824,
+  "scale": 3.08,
+  "x": 5525,
+  "y": 964,
+  "w": 217,
+  "h": 195,
+  "name": "Ossuary Level 3"
+ },
+ "OS|1.5": {
+  "score": 0.885,
+  "scale": 5.2,
+  "x": 5782,
+  "y": 1268,
+  "w": 158,
+  "h": 115,
+  "name": "Ossuary Level 1.5"
+ },
+ "OS|2.5A": {
+  "score": 0.72,
+  "scale": 6.32,
+  "x": 5706,
+  "y": 1280,
+  "w": 75,
+  "h": 95,
+  "name": "Ossuary Level 2.5 Caverns"
+ },
+ "PU|1": {
+  "score": 0.895,
+  "scale": 4.46,
+  "x": 5124,
+  "y": 1246,
+  "w": 104,
+  "h": 135,
+  "name": "Pulma Level 1"
+ },
+ "PU|2": {
+  "score": 0.877,
+  "scale": 3.12,
+  "x": 5253,
+  "y": 1226,
+  "w": 118,
+  "h": 192,
+  "name": "Pulma Level 2"
+ },
+ "PU|3": {
+  "score": 0.838,
+  "scale": 5.2,
+  "x": 5413,
+  "y": 1267,
+  "w": 125,
+  "h": 115,
+  "name": "Pulma Level 3"
+ },
+ "SC|2": {
+  "score": 0.842,
+  "scale": 2.7,
+  "x": 5239,
+  "y": 2418,
+  "w": 120,
+  "h": 222,
+  "name": "Shadowspire Cathedral Level 2"
+ },
+ "TM|1": {
+  "score": 0.881,
+  "scale": 5.24,
+  "x": 5549,
+  "y": 621,
+  "w": 111,
+  "h": 115,
+  "name": "Mausoleum Level 1"
+ },
+ "TM|2": {
+  "score": 0.913,
+  "scale": 2.66,
+  "x": 5325,
+  "y": 545,
+  "w": 224,
+  "h": 226,
+  "name": "Mausoleum Level 2"
+ },
+ "TM|3": {
+  "score": 0.886,
+  "scale": 4.5,
+  "x": 5166,
+  "y": 611,
+  "w": 120,
+  "h": 133,
+  "name": "Mausoleum Level 3"
+ },
+ "TM|4": {
+  "score": 0.79,
+  "scale": 5.04,
+  "x": 5697,
+  "y": 606,
+  "w": 179,
+  "h": 119,
+  "name": "Mausoleum Level 4"
+ },
+ "TM|2.5": {
+  "score": 0.913,
+  "scale": 2.66,
+  "x": 5325,
+  "y": 545,
+  "w": 224,
+  "h": 226,
+  "name": "Mausoleum Level 2.5"
+ },
+ "NP|1": {
+  "score": 0.825,
+  "scale": 3.36,
+  "x": 5441,
+  "y": 360,
+  "w": 180,
+  "h": 179,
+  "name": "New Player Dungeon Level 1"
+ },
+ "NP|2": {
+  "score": 0.898,
+  "scale": 4.6,
+  "x": 5588,
+  "y": 423,
+  "w": 94,
+  "h": 130,
+  "name": "New Player Dungeon Level 2"
+ },
+ "TT|2": {
+  "score": 0.927,
+  "scale": 2.46,
+  "x": 6804,
+  "y": 1902,
+  "w": 180,
+  "h": 244,
+  "name": "Tidal Tomb Level 2"
+ },
+ "UM|1": {
+  "score": 0.843,
+  "scale": 3.58,
+  "x": 5223,
+  "y": 245,
+  "w": 329,
+  "h": 168,
+  "name": "Undermountain Level 1"
+ },
+ "AK|3.5": {
+  "score": 0.581,
+  "scale": 6.5,
+  "x": 5774,
+  "y": 68,
+  "w": 86,
+  "h": 92,
+  "name": "Aegis Keep Level 3.5"
+ },
+ "CV|4": {
+  "score": 0.647,
+  "scale": 2.2,
+  "x": 5244,
+  "y": 3000,
+  "w": 214,
+  "h": 272,
+  "name": "Cavernam Level 4"
+ },
+ "OS|2.5Y": {
+  "score": 0.547,
+  "scale": 6.5,
+  "x": 5688,
+  "y": 1408,
+  "w": 84,
+  "h": 92,
+  "name": "Ossuary Level 2.5 Crypt"
+ },
+ "SC|1": {
+  "score": 0.752,
+  "scale": 2.5,
+  "x": 5092,
+  "y": 2430,
+  "w": 136,
+  "h": 240,
+  "name": "Shadowspire Cathedral Level 1"
+ },
+ "TT|1": {
+  "score": 0.549,
+  "scale": 2.2,
+  "x": 6580,
+  "y": 1902,
+  "w": 198,
+  "h": 272,
+  "name": "Tidal Tomb Level 1"
+ },
+ "SC|3": {
+  "x": 7720,
+  "y": 1380,
+  "w": 173,
+  "h": 150,
+  "name": "Shadowspire Cathedral Level 3",
+  "src": "butler"
+ },
+ "DT|3.5": {
+  "x": 7953,
+  "y": 1380,
+  "w": 122,
+  "h": 150,
+  "name": "Darkmire Temple Level 3.5",
+  "src": "butler"
+ },
+ "OS|4": {
+  "x": 8135,
+  "y": 1380,
+  "w": 87,
+  "h": 150,
+  "name": "Ossuary Level 4",
+  "src": "butler"
+ },
+ "TT|3": {
+  "x": 8282,
+  "y": 1380,
+  "w": 100,
+  "h": 150,
+  "name": "Tidal Tomb Level 3",
+  "src": "butler"
+ },
+ "IN|2": {
+  "x": 8080,
+  "y": 560,
+  "w": 440,
+  "h": 400,
+  "name": "Inferno Level 2",
+  "src": "map5"
+ }
+}
