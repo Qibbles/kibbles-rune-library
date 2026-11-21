@@ -352,6 +352,19 @@ function showCreature(c) {
     li.onclick = () => { map.flyTo(ll, Math.max(map.getZoom(), 5)); m.openPopup(); };
     ol.appendChild(li);
   });
+  let n = c.s.length;
+  (c.ds || []).forEach(([lvl, x, y]) => {
+    const i = n++; const ll = toLL(x, y); lls.push(ll);
+    const e = dungeonEntrance(lvl);
+    const entHtml = e ? `<div class="near"><div class="pop-meta" style="cursor:default">Nearest rune (dungeon entrance)</div><div data-x="${e.location.x}" data-y="${e.location.y}"><span class="sw" style="background:var(--gold)"></span><span>${esc(e.fullName)}<br><span class="pop-meta" style="margin:0">Click to show the entrance</span></span><span class="d">${e.location.x}, ${e.location.y}</span></div></div>` : '';
+    const html = `<b>${esc(c.n)}</b><div class="pop-meta">${esc(lvl)} · X ${x}, Y ${y}</div>${entHtml}`;
+    const m = L.marker(ll, { icon: hitIcon(i + 1), pane: 'searchPane' }).bindPopup(html, { autoPan: true, autoPanPaddingTopLeft: [20, 60], autoPanPaddingBottomRight: [340, 40], closeOnClick: false })
+      .bindTooltip(esc(lvl), { permanent: true, direction: 'right', offset: [16, 0], className: 'lbl hitlbl', pane: 'searchPane' }).addTo(focusLayer);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="n">${i + 1}</span><span>${esc(lvl)}<br><span class="count">${e ? 'Entrance: ' + esc(e.fullName) : 'Dungeon'}</span></span><span class="c">${x}, ${y}</span>`;
+    li.onclick = () => { map.flyTo(ll, Math.max(map.getZoom(), 5)); m.openPopup(); };
+    ol.appendChild(li);
+  });
   (c.d || []).forEach(dn => {
     const e = dungeonEntrance(dn);
     const li = document.createElement('li');
@@ -364,7 +377,7 @@ function showCreature(c) {
     }
     ol.appendChild(li);
   });
-  if (!c.s.length && !(c.d || []).length) ol.innerHTML = '<li><span>No known locations</span></li>';
+  if (!c.s.length && !(c.ds || []).length && !(c.d || []).length) ol.innerHTML = '<li><span>No known locations</span></li>';
   document.getElementById('dTitle').textContent = c.n;
   document.getElementById('dExport').style.display = 'none';
   document.getElementById('detail').classList.add('on');
@@ -416,7 +429,8 @@ function render(filter = '') {
       const cw = document.createElement('div'); cw.className = 'books';
       cHits.slice(0, 40).forEach(c => {
         const d = document.createElement('div'); d.className = 'book';
-        const info = [c.s.length ? `${c.s.length} spot${c.s.length === 1 ? '' : 's'}` : '', (c.d || []).length ? `${c.d.length} dungeon level${c.d.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') || 'no known location';
+        const nd = new Set([...(c.ds || []).map(d => d[0]), ...(c.d || [])]).size;
+        const info = [c.s.length ? `${c.s.length} overworld spot${c.s.length === 1 ? '' : 's'}` : '', nd ? `${nd} dungeon level${nd === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') || 'no known location';
         d.innerHTML = `<span class="nm">${esc(c.n)}<span class="ctag">creature</span><br><span class="count">${info}</span></span>`;
         d.onclick = () => { document.querySelectorAll('.book.active').forEach(b => b.classList.remove('active')); d.classList.add('active'); showCreature(c); };
         cw.appendChild(d);
