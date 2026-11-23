@@ -186,7 +186,7 @@ function pinIcon(label) {
   return L.divIcon({ className: '', html: `<div class="pin">${esc(label)}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] });
 }
 
-// Nearest rune from each overlay set (excluding the rune's own book)
+// Nearest rune from each overlay set (excluding the rune's own set)
 // Dungeon interiors sit beside the overworld; measure them from their overworld entrance instead
 let ENTR = {};
 function worldPos(r) {
@@ -198,9 +198,11 @@ function worldPos(r) {
 function nearestHtml(r, ownBook) {
   const from = worldPos(r);
   if (!from) return '';
+  // Skip the rune's own set(s): comparing against its own set is circular
+  const ownSets = new Set(DATA.sets.filter(s => s.books.some(b => b === ownBook || bookRunes(b).includes(r))));
   const best = new Map();
   for (const s of DATA.sets) for (const b of s.books) {
-    if (!overlays.has(bookKey(s, b)) || b === ownBook) continue;
+    if (ownSets.has(s) || !overlays.has(bookKey(s, b))) continue;
     for (const o of bookRunes(b)) {
       if (o === r) continue;
       const to = worldPos(o); if (!to || to.via === r || o === from.via) continue;
