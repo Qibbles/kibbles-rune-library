@@ -229,10 +229,20 @@ function nearestHtml(r, ownBook) {
 function popupHtml(r, book) {
   return `<b>${esc(r.fullName)}</b><div class="pop-meta">${book ? esc(book.name) + ' · ' : ''}X ${r.location.x}, Y ${r.location.y}</div>${nearestHtml(r, book)}`;
 }
-map.on('popupopen', e => {
-  e.popup.getElement().querySelectorAll('.near div[data-x]').forEach(el => el.onclick = () =>
+let openPopup = null;
+function wireNear(popup) {
+  popup.getElement().querySelectorAll('.near div[data-x]').forEach(el => el.onclick = () =>
     map.flyTo(toLL(+el.dataset.x, +el.dataset.y), Math.max(map.getZoom(), 5)));
-});
+}
+map.on('popupopen', e => { openPopup = e.popup; wireNear(e.popup); });
+map.on('popupclose', e => { if (openPopup === e.popup) openPopup = null; });
+// Clicking empty map closes the open popup (pin clicks stop propagation, so they don't reach here)
+map.on('click', () => map.closePopup());
+// Re-render the open popup when overlay sets change, so its nearest-rune list stays current
+function refreshOpenPopup() {
+  if (!openPopup || !openPopup.isOpen()) return;
+  openPopup.update(); wireNear(openPopup);
+}
 // Hover: temporary preview that disappears on mouse-out. Click: pinned popup that stays until closed with ×.
 let hoverTip = null;
 function hideHover() { if (hoverTip) { hoverTip.remove(); hoverTip = null; } }
@@ -272,6 +282,7 @@ function drawOverlays() {
   }
   store.set('overlays', [...overlays]);
   scheduleLabels();
+  refreshOpenPopup();
 }
 
 // Overlay labels: only for pins currently on screen, rebuilt after pan/zoom settles (capped for speed)
