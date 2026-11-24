@@ -35,6 +35,8 @@
   .hint{margin-top:8px;color:var(--muted);font-size:11.5px}
   #list{flex:1;overflow:auto;padding:8px}
   #setHint{margin:0;padding:8px 18px 0}
+  .book .view{font-size:11.5px;color:var(--muted);white-space:nowrap;border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  .book:hover .view,.book.active .view{color:var(--gold2);border-color:var(--gold)}
   .set{margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
   .set>summary{list-style:none;cursor:pointer;padding:9px 10px;display:flex;align-items:center;gap:9px}
   .set>summary::-webkit-details-marker{display:none}
@@ -127,7 +129,7 @@
       <div class="sub" id="stats">Loading…</div>
       <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes, creatures or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
     </header>
-    <div class="hint" id="setHint">Tick ☑ to show a set on the map · click ▸ to see its books</div>
+    <div class="hint" id="setHint">☑ tick to show on the map · ▸ open a set · click a book to list its runes</div>
     <div id="list"></div>
   </aside>
   <main>
@@ -569,7 +571,8 @@ function render(filter = '') {
     const books = document.createElement('div'); books.className = 'books';
     s.books.forEach(b => {
       const d = document.createElement('div'); d.className = 'book';
-      d.innerHTML = `<input type="checkbox" title="Show as overlay"><span class="nm">${esc(b.name)}</span><span class="count">${b.runeIds.length}</span>`;
+      d.innerHTML = `<input type="checkbox" title="Show as overlay"><span class="nm">${esc(b.name)}</span><span class="count">${b.runeIds.length} runes</span><span class="view">View ›</span>`;
+      d.title = 'Click to list and map this book\'s runes';
       const cb = d.querySelector('input');
       cb.checked = overlays.has(bookKey(s, b));
       cb.onclick = e => e.stopPropagation();
