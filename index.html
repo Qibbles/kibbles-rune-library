@@ -165,7 +165,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const focusLayer = L.layerGroup().addTo(map);
 const overlayLayer = L.layerGroup().addTo(map);
 let DATA, RUNES, current = null;
-let overlays = new Set(store.get('overlays', []));   // keys: "<setId>|<bookId>"
+const savedOverlays = store.get('overlays', null);   // null = first visit (nothing saved yet)
+let overlays = new Set(savedOverlays || []);   // keys: "<setId>|<bookId>"
+const DEFAULT_OVERLAY_SETS = ['witcher'];   // sets ticked on a first visit
 const bookKey = (s, b) => `${s.setId}|${b.id}`;
 const bookRunes = b => b.runeIds.map(id => RUNES[id]).filter(r => r && r.location);
 
@@ -571,6 +573,7 @@ fetch('data/library.json?v=' + DATA_VERSION).then(r => r.json()).then(d => {
   const nRunes = DATA.sets.reduce((n, s) => n + s.books.reduce((m, b) => m + b.runeIds.length, 0), 0);
   const nBooks = DATA.sets.reduce((n, s) => n + s.books.length, 0);
   document.getElementById('stats').textContent = `${DATA.sets.length} sets · ${nBooks} books · ${nRunes} runes`;
+  if (!savedOverlays) DATA.sets.filter(s => DEFAULT_OVERLAY_SETS.includes(s.setId)).forEach(s => s.books.forEach(b => overlays.add(bookKey(s, b))));
   render(); drawOverlays(); applyGates();
 }).catch(err => { document.getElementById('stats').textContent = 'Could not load data/library.json'; console.error(err); });
 </script>
