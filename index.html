@@ -38,6 +38,9 @@
   .set>summary{list-style:none;cursor:pointer;padding:9px 10px;display:flex;align-items:center;gap:9px}
   .set>summary::-webkit-details-marker{display:none}
   .set>summary:hover{background:#222632}
+  .chev{color:var(--muted);font-size:17px;line-height:1;width:14px;text-align:center;flex:none;transition:transform .15s}
+  .set>summary:hover .chev{color:var(--gold2)}
+  .set[open]>summary .chev{transform:rotate(90deg)}
   .set:has(>summary input:checked){border-color:var(--gold);background:#2a2416;border-left-width:3px}
   .set:has(>summary input:checked)>summary .nm{color:var(--gold2)}
   .set:has(>summary input:indeterminate){border-color:rgba(214,178,94,.55);border-left-width:3px}
@@ -122,7 +125,6 @@
       <h1>Kibble's Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
       <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes, creatures or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
-      <div class="hint">Tick a set or book to keep it on the map as an overlay. Click a book name to focus it.</div>
     </header>
     <div id="list"></div>
   </aside>
@@ -146,7 +148,7 @@
       <ul>
         <li>Rune data: <a href="https://uorunes.com" target="_blank" rel="noopener">uorunes.com</a></li>
         <li>Creature data: <a href="https://www.outlandsbutler.com/creaturelibrary" target="_blank" rel="noopener">Outlands Butler</a></li>
-        <li>Explore Outlands</li>
+        <li><a href="https://exploreoutlands.com/" target="_blank" rel="noopener">Explore Outlands</a></li>
         <li>Stairs icon by Delapouite, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> (CC BY 3.0)</li>
       </ul>
     </div>
@@ -549,7 +551,7 @@ function render(filter = '') {
   DATA.sets.forEach(s => {
     const det = document.createElement('details'); det.className = 'set';
     const total = s.books.reduce((m, b) => m + b.runeIds.length, 0);
-    det.innerHTML = `<summary><input type="checkbox" title="Show whole set as overlay"><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(s.setName)}</span><span class="count">${total} runes</span></summary>`;
+    det.innerHTML = `<summary><input type="checkbox" title="Show whole set as overlay"><span class="sw" style="background:${s.color}"></span><span class="nm">${esc(s.setName)}</span><span class="count">${total} runes</span><span class="chev" title="Show books">▸</span></summary>`;
     const setBox = det.querySelector('input');
     setBox.onclick = e => e.stopPropagation();
     setBox.onchange = () => {
