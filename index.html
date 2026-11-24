@@ -34,6 +34,7 @@
   #map.nolabels .leaflet-tooltip.lbl.ov{display:none}
   .hint{margin-top:8px;color:var(--muted);font-size:11.5px}
   #list{flex:1;overflow:auto;padding:8px}
+  #setHint{margin:0;padding:8px 18px 0}
   .set{margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
   .set>summary{list-style:none;cursor:pointer;padding:9px 10px;display:flex;align-items:center;gap:9px}
   .set>summary::-webkit-details-marker{display:none}
@@ -125,8 +126,8 @@
       <h1>Kibble's Rune Library</h1>
       <div class="sub" id="stats">Loading…</div>
       <div class="sbox" id="sbox"><input id="q" class="search" placeholder="Search runes, creatures or X, Y…" autocomplete="off"><button class="sclear" id="qclear" title="Clear search">×</button></div>
-      <div class="hint">Tick ☑ to show a set on the map · click ▸ to see its books</div>
     </header>
+    <div class="hint" id="setHint">Tick ☑ to show a set on the map · click ▸ to see its books</div>
     <div id="list"></div>
   </aside>
   <main>
