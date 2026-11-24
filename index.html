@@ -42,6 +42,10 @@
   .set:has(>summary input:checked)>summary .nm{color:var(--gold2)}
   .set:has(>summary input:indeterminate){border-color:rgba(214,178,94,.55);box-shadow:inset 3px 0 0 rgba(214,178,94,.55)}
   .book:has(input:checked){background:#2a2416}
+  .set:has(>summary input:checked)>summary{box-shadow:inset 3px 0 0 var(--gold)}
+  .set:has(>summary input:indeterminate)>summary{box-shadow:inset 3px 0 0 rgba(214,178,94,.55)}
+  .set:has(>summary input:checked)>summary:hover,.book:has(input:checked):hover{background:#3d3320}
+  .set:has(>summary input:indeterminate)>summary:hover{background:#2e2819}
   .sw{width:12px;height:12px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.5)}
   .set .nm{flex:1;font-weight:600}
   .count{color:var(--muted);font-size:12px;white-space:nowrap}
